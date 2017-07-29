@@ -1,0 +1,31 @@
+{
+    "name": "phpclassic/php-shopify",
+    "description": "PHP SDK for Shopify API",
+    "keywords": ["PHP","Shopify","SDK"],
+    "homepage": "https://github.com/phpclassic/php-shopify",
+    "type": "library",
+    "require": {
+        "php": ">=5.6",
+        "ext-curl": "*"
+    },
+    "license": "Apache License 2.0",
+    "authors": [
+        {
+            "name": "Tareq Mahmood",
+            "email": "tareqtms@yahoo.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PHPShopify\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PHPShopify\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.5"
+    }
+}
