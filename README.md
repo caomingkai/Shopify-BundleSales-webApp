@@ -13,11 +13,11 @@
 
  ### Work Flow:
  1. Merchant find this app in appstore, click "GET".
- 1.1 The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
- 1.2 Meanwhile, the browser send following parameters with the URL: ?shop=...&hmac=...&timestamp=...
+    + The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
+    + Meanwhile, the browser send following parameters with the URL: ?shop=...&hmac=...&timestamp=...
 
  2. The app backend server receives this GET request with those parameters.
-   2.1 First it will check if this shop has already installed this app or not, by check its database(merchantToken.txt).
+    + First it will check if this shop has already installed this app or not, by check its database(merchantToken.txt).
      - If there exist such shop with the same name, redirect merchant to the index webpage using header() function.
      - If there doesn't exist this shop in database, redirect merchant back to Shopify server to ask them for authorization, with following parameters: client_id(apiKey), scope, redirect_uri, with shopUrl rendering such url: https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php
 
