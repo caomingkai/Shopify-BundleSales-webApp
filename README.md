@@ -6,10 +6,10 @@
  ## I. Oauth process
  ### Related File:
    + install/install.php
-   + merchantToken.txt  **write** --- keep record of shop and its accessToken
-   + productInfo.txt  **write**   --- keep record of productInfo for this shop
-   + collectionInfo.txt **write** --- keep record of collectionInfo for this shop
-   + assetInfo.txt  **write**     --- keep record of assetInfo for this shop
+   + merchantToken.txt --- **write** --- keep record of shop and its accessToken
+   + productInfo.txt --- **write**   --- keep record of productInfo for this shop
+   + collectionInfo.txt --- **write** --- keep record of collectionInfo for this shop
+   + assetInfo.txt --- **write**     --- keep record of assetInfo for this shop
  ### Work Flow:
    1. Merchant find this app in appstore, click "GET".
       + The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
@@ -31,9 +31,12 @@
    + index.php
    + deleteBundle.php
    + addBundle.php
-   + productInfo.txt  - read
-   + collectionInfo.txt  - read
-   + shopBundle.txt - read/write
+   + productInfo.txt  ---**read**
+   + collectionInfo.txt   --- **read**
+   + shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop
+      + content format:
+      + unique bundleID , item num, productID and discount pairs
+      + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
    1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
    2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt /
