@@ -18,8 +18,8 @@
 
  2. The app backend server receives this GET request with those parameters.
    2.1 First it will check if this shop has already installed this app or not, by check its database(merchantToken.txt).
-   2.1.1 If there exist such shop with the same name, redirect merchant to the index webpage using header() function.
-   2.1.2 If there doesn't exist this shop in database, redirect merchant back to Shopify server to ask them for authorization, with following parameters: client_id(apiKey), scope, redirect_uri, with shopUrl rendering such url: https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php
+     - If there exist such shop with the same name, redirect merchant to the index webpage using header() function.
+     - If there doesn't exist this shop in database, redirect merchant back to Shopify server to ask them for authorization, with following parameters: client_id(apiKey), scope, redirect_uri, with shopUrl rendering such url: https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php
 
  3. The merchant is redirected to the above URL, and click OK/Cancel to authorize this app to read some info about his store. When 'OK' is clicked, they are directed to the redirect_uri specified in above URL.
 
