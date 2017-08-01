@@ -6,7 +6,7 @@
  ## I. Oauth process
  ### Related File:
    + install/install.php
-   + merchantToken.txt - write
+   + merchantToken.txt - write - keep record of shop and its accessToken
    + productInfo.txt  - write
    + collectionInfo.txt  - write
    + assetInfo.txt  - write
@@ -24,16 +24,21 @@
       + When Shopify server responses back, the server could store the AccessToken in database for later use.
    5. In the end, with the AccessToken, this file requests related product/collect/assets info from this shop. And store these info in local database, in order that later the merchant could make selection from it.
 
- ## II. App Frontend
+ ## II. App Front-end
  ### Function:
    Give merchants a portal to set their bundle sales, by collection/specific product/percentage/fixed number.
  ### Related File:
    + index.php
+   + deleteBundle.php
+   + addBundle.php
    + productInfo.txt  - read
    + collectionInfo.txt  - read
+   + shopBundle.txt - read/write
  ### Work Flow:
-    1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
-    2. In the php file, read product/collection/asset information from local database, for later merchants select from to make their bundle sales combo.
-    3. Put these info in a <div></div> for later use.
+   1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
+   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt /
+   3. In the php file, read product/collection information from local database, for later merchants select from to make their bundle sales combo. And write these info and checkbox into a <div></div> block.
+   4. When merchants click 'choose item', it will open a modal window with info read from <div> block, making selection.
+   5. Merchants continue adding items and their discounts, then click submit
 
- ## III. App Backend
+ ## III. App Back-end
