@@ -28,20 +28,25 @@
  ### Function:
    Give merchants a portal to set their bundle sales, by collection/specific product/percentage/fixed number.
  ### Related File:
-   + index.php
-   + deleteBundle.php
-   + addBundle.php
+   + index.php  --- render the first page after merchants click the app icon in their admin panel
+   + addBundle.php  --- add new bundle sales
+      + update shopBundle.txt / addedProduct.txt
+      + make REST calls to Shopify server to modify shop.metafield for this shop
+      + make REST calls to Shopify server to add **shadow products** with sales price
+      + update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
+   + deleteBundle.php --- delete specific bundle
+      + same as deleteBundle.php
    + productInfo.txt  ---**read**
    + collectionInfo.txt   --- **read**
-   + shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop
-      + content format:
+   + shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
       + unique bundleID , item num, productID and discount pairs
       + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
    1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
-   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt /
-   3. In the php file, read product/collection information from local database, for later merchants select from to make their bundle sales combo. And write these info and checkbox into a <div></div> block.
+   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt / addedProduct.txt etc.
+   3. In the php file, read product/collection information from local database, for merchants later select from to make their bundle sales combo. And write these info and checkbox into a <div></div> block.
    4. When merchants click 'choose item', it will open a modal window with info read from <div> block, making selection.
-   5. Merchants continue adding items and their discounts, then click submit
-
+   5. Merchants continue adding items and their discounts, then click 'submit'. This would send AJAX call to addBundle.php.
+   6. A bundle updating status box should be displayed to let merchant know it's good to go now. it can implemented using response.
+   
  ## III. App Back-end
