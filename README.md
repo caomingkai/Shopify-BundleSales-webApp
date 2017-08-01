@@ -6,10 +6,10 @@
  ## I. Oauth process
  ### Related File:
    + install/install.php
-   + merchantToken.txt - write - keep record of shop and its accessToken
-   + productInfo.txt  - write
-   + collectionInfo.txt  - write
-   + assetInfo.txt  - write
+   + merchantToken.txt  **write** --- keep record of shop and its accessToken
+   + productInfo.txt  **write**   --- keep record of productInfo for this shop
+   + collectionInfo.txt **write** --- keep record of collectionInfo for this shop
+   + assetInfo.txt  **write**     --- keep record of assetInfo for this shop
  ### Work Flow:
    1. Merchant find this app in appstore, click "GET".
       + The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
