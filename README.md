@@ -5,11 +5,11 @@
 
  ## I. OAuth process
  ### Related File:
-   + install/install.php
-   + merchantToken.txt --- **write** --- keep record of shop and its accessToken
-   + productInfo.txt --- **write**   --- keep record of productInfo for this shop
-   + collectionInfo.txt --- **write** --- keep record of collectionInfo for this shop
-   + assetInfo.txt --- **write**     --- keep record of assetInfo for this shop
+   1. install/install.php
+   1. merchantToken.txt --- **write** --- keep record of shop and its accessToken
+   1. productInfo.txt --- **write**   --- keep record of productInfo for this shop
+   1. collectionInfo.txt --- **write** --- keep record of collectionInfo for this shop
+   1. assetInfo.txt --- **write**     --- keep record of assetInfo for this shop
  ### Work Flow:
    1. Merchant find this app in appstore, click "GET".
       + The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
@@ -28,17 +28,17 @@
  ### Function:
    Give merchants a portal to set their bundle sales, by collection/specific product/percentage/fixed number.
  ### Related File:
-   + index.php  --- render the first page after merchants click the app icon in their admin panel
-   + addBundle.php  --- add new bundle sales
+   1. index.php  --- render the first page after merchants click the app icon in their admin panel
+   1. addBundle.php  --- add new bundle sales
       + update shopBundle.txt / addedProduct.txt
       + make REST calls to Shopify server to modify shop.metafield for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
       + update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
-   + deleteBundle.php --- delete specific bundle
+   1. deleteBundle.php --- delete specific bundle
       + same as deleteBundle.php
-   + productInfo.txt  ---**read**
-   + collectionInfo.txt   --- **read**
-   + shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
+   1. productInfo.txt  ---**read**
+   1. collectionInfo.txt   --- **read**
+   1. shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
       + unique bundleID , item num, productID and discount pairs
       + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
@@ -51,25 +51,25 @@
 
  ## III. App Back-end
  ### Function:
-   + deal with newly **added/deleted POST** bundle from front-end, calculate new price for **shadow products** in bundle sales. _Releted file_: addBundle.php
-   + prefix unique BundleID with received POST parameters, store it in local database. _Releted file_:  shopBundle.txt
-   + make RESTful POST call to Shopify server, to update **shop.metafield** of this shop
-   + make RESTful POST call to Shopify server, to add **shadow products** for corresponding bundle sales
-   + keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: addedProduct.txt
-   +
-   + deal with webhook responses from Shopify server, in case product_added/ order_completed events happen.
+   1. deal with newly **added/deleted POST** bundle from front-end, calculate new price for **shadow products** in bundle sales. _Releted file_: addBundle.php
+   1. prefix unique BundleID with received POST parameters, store it in local database. _Releted file_:  shopBundle.txt
+   1. make RESTful POST call to Shopify server, to update **shop.metafield** of this shop
+   1. make RESTful POST call to Shopify server, to add **shadow products** for corresponding bundle sales
+   1. keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: addedProduct.txt
+   1.
+   1. deal with webhook responses from Shopify server, in case product_added/ order_completed events happen.
  ### Related File:
-   + index.php  --- render the first page after merchants click the app icon in their admin panel
-   + addBundle.php  --- add new bundle sales
+   1. index.php  --- render the first page after merchants click the app icon in their admin panel
+   1. addBundle.php  --- add new bundle sales
       + update shopBundle.txt / addedProduct.txt
       + make REST calls to Shopify server to modify shop.metafield for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
       + update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
-   + deleteBundle.php --- delete specific bundle
+   1. deleteBundle.php --- delete specific bundle
       + same as deleteBundle.php
-   + productInfo.txt  ---**read**
-   + collectionInfo.txt   --- **read**
-   + shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
+   1. productInfo.txt  ---**read**
+   1. collectionInfo.txt   --- **read**
+   1. shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
       + unique bundleID , item num, productID and discount pairs
       + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
@@ -77,16 +77,16 @@
 
  ## IIII. Related shopify object for current shop
  ### shop.metafield
-    1. bundleInfo(namespace)->(key, value)
-    sdfsfsdsdfsdfs  
-        + bundleNum, int( i.e. 2 )
-        + bundleDetail, string ( bundleID , item num, productID and discount pairs,bundleID , item num, productID and discount pairs )
-    2. cartProductHash(namespace)->(key, value)
-        + hashNum, int ( i.e. 3 )
-        + hashDetail, string(productID,num,productID,num,productID,num)
-    3. matchedProduct(namespace)->(key, value)
-        + matchedNum, int ( i.e. 2 )
-        + matchedDetail, string(productID,num,productID,num)
+   1. bundleInfo(namespace)->(key, value)
+
+    + bundleNum, int( i.e. 2 )
+    + bundleDetail, string ( bundleID , item num, productID and discount pairs,bundleID , item num, productID and discount pairs )
+   2. cartProductHash(namespace)->(key, value)
+      + hashNum, int ( i.e. 3 )
+      + hashDetail, string(productID,num,productID,num,productID,num)
+   3. matchedProduct(namespace)->(key, value)
+      + matchedNum, int ( i.e. 2 )
+      + matchedDetail, string(productID,num,productID,num)
 
  ### bundleCheck.liquid code snippet
     1.
