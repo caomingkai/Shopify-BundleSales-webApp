@@ -22,9 +22,9 @@
  3. The merchant is redirected to the above URL, and click OK/Cancel to authorize this app to read some info about his store. When 'OK' is clicked, they are directed to the redirect_uri specified in above URL.
 
  4. Now the merchant is redirected back again to PHP script on the app backend server, which actually is the same script as the former one.
-   + Meanwhile, Shopify server send several parameters with the redirect_uri as follows: code/ hmac/ timestamp, etc.
-   + The script now apply with this temporary code and its apiKey/SharedSecret/shopURL for a permanent AccessToken from Shopify server.
-   + When Shopify server responses back, the server could store the AccessToken in database for later use.
+    + Meanwhile, Shopify server send several parameters with the redirect_uri as follows: code/ hmac/ timestamp, etc.
+    + The script now apply with this temporary code and its apiKey/SharedSecret/shopURL for a permanent AccessToken from Shopify server.
+    + When Shopify server responses back, the server could store the AccessToken in database for later use.
 
  5. In the end, with the AccessToken, this file requests related product/collect/assets info from this shop. And store these info in local database, in order that later the merchant could make selection from it.
 
@@ -32,7 +32,7 @@
  ### Function:
  Give merchants a portal to set their bundle sales, by collection/specific product/percentage/fixed number.
  ### Related File:
- index.php
+  + index.php
  ### Work Flow:
  1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
  2. In the php file, read product/collection/asset information from local database, for later merchants select from to make their bundle sales combo.
