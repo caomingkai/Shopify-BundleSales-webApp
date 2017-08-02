@@ -60,6 +60,7 @@
    1. deal with webhook responses from Shopify server, in case product_added/ order_completed events happen.
       + if order_completed webhook, read response to see completed product quantity to update original product inventory
       + if product_added webhook, see if it belongs to a certain bundle sale, add **"shadow products"** for this product. Meanwhile, update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
+
  ### Related File:
    1. addBundle.php  --- add new bundle sales
       + update shopBundle.txt / shadowToOrigin.txt
@@ -78,15 +79,16 @@
       + format : shadowProductID, originalProductID
    1. bundleToShadow.txt --- **read/write** --- in case certain bundle deletion or app uninstall
       + format : bundleID, shadowProductID_1, shadowProductID_2, ...
+
  ### Work Flow:
    1. first read into shopBundle.txt / shadowToOrigin.txt, for later use
    2. receive newly POST bundleInfo, check request type: add/ delete/ add&delete ?
    2. when add Bundle:
       + create unique bundleID, and append it with POST parameters; update shopBundle.txt
-      + update bundleToShadow.txt / shadowToOrigin.txt
       + make REST calls to update shop.metafield
-      + make REST calls to shop.metafield.originToShadow
       + make REST calls to add **"shadow products"** in current shop
+      + make REST calls to shop.metafield.originToShadow
+      + update bundleToShadow.txt / shadowToOrigin.txt
    3. when delete Bundle:
       + read POST parameter['bundleID'], find out which bundle need to be deleted
       + delete it from shopBundle.txt
@@ -94,12 +96,31 @@
       + make REST calls to update shop.metafield.originToShadow
       + make REST calls to delete **"shadow products"** in current shop, based on bundleToShadow.txt,
       + delete it from bundleToShadow.txt / shadowToOrigin.txt
-   4. when merchants edit/add a new product, tigger product create/update/delete events, Shopify server POST json data to this app backend file webhookHandler.php. webhookHandler.php do the following things:
-      + if add a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, add
+   4. Webhook: when merchants edit/add a new product, tigger product create/update/delete events, Shopify server POST json data to this app backend file webhookHandler.php. webhookHandler.php do the following things:
+      + if _add_ a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, do following:
+          + make REST calls to add **"shadow products"** in current shop
+          + make REST calls to shop.metafield.originToShadow
+          + update bundleToShadow.txt / shadowToOrigin.txt
+      + if _edit_ an existing product, check if the following things are modified:
+          + if **price** is changed, update productInfo.txt / collection.txt
+          And If this product belongs to a certain bundle, have to call REST call to change its shadow product's price
+          + if **collection** is changed, update productInfo.txt / collection.txt;
+          And If this product belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle; loop check if now it belongs to a new bundle, have to call REST to add new shadow product, update bundleToShadow.txt / shadowToOrigin.txt
+      + if _delete_ a product, do the following:
+          + update productInfo.txt / collection.txt
+          + If it belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle;  Also update bundleToShadow.txt / shadowToOrigin.txt
+    5. Webhook: update product inventory after customers pay off their order. This event also triggers a webhook POST from Shopify server.
+      + loop through all line items in the order, check if there exists shadow products.
+      + If YES, for each of such shadow products, do the following things:
+           + do a math to update the current quantity of this shadow product in productInfo.txt.
+           + based on shadowToOrigin.txt, find out its original product,
+           + make REST call to update the quantity of the original product in Shopify server.
+      + if No, do nothing.
  ### Files relationship
    1. shopBundle.txt is the source info of shopify.metafield.bundleInfo
    3. shadowToOrigin.txt <----> shopify.metafield.originToShadow, they have opposite key:value pairs
    4. bundleToShadow.txt ---> shadowToOrigin.txt , from this we could find all involved origin products
+
  ## IIII. Related shopify object for current shop
  ### shop.metafield
    1. bundleInfo(namespace)->(key, value)
