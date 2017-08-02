@@ -30,7 +30,7 @@
  ### Related File:
    1. index.php  --- render the first page after merchants click the app icon in their admin panel
    1. addBundle.php  --- add new bundle sales
-      + update shopBundle.txt / addedProduct.txt
+      + update shopBundle.txt / shadowToOrigin.txt
       + make REST calls to Shopify server to modify shop.metafield for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
       + update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
@@ -43,7 +43,7 @@
       + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
    1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
-   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt / addedProduct.txt etc.
+   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt / shadowToOrigin.txt etc.
    3. In the php file, read product/collection information from local database, for merchants later select from to make their bundle sales combo. And write these info and checkbox into a <div></div> block.
    4. When merchants click 'choose item', it will open a modal window with info read from <div> block, making selection.
    5. Merchants continue adding items and their discounts, then click 'submit'. This would send AJAX call to addBundle.php.
@@ -51,50 +51,82 @@
 
  ## III. App Back-end
  ### Function:
-   1. deal with newly **added/deleted POST** bundle from front-end, calculate new price for **shadow products** in bundle sales. _Releted file_: addBundle.php
+   1. deal with newly **added/deleted POST** bundle from front-end, calculate new price for **"shadow products"** in bundle sales. _Releted file_: addBundle.php
    1. prefix unique BundleID with received POST parameters, store it in local database. _Releted file_:  shopBundle.txt
    1. make RESTful POST call to Shopify server, to update **shop.metafield** of this shop
-   1. make RESTful POST call to Shopify server, to add **shadow products** for corresponding bundle sales
-   1. keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: addedProduct.txt
+   1. make RESTful POST call to Shopify server, to add **"shadow products"** for corresponding bundle sales
+   1. keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: shadowToOrigin.txt
    1. (_Pending_) insert bundleCheck.liquid into Assets of this shop ( Maybe could be done for only one time, not each time )
    1. deal with webhook responses from Shopify server, in case product_added/ order_completed events happen.
       + if order_completed webhook, read response to see completed product quantity to update original product inventory
-      + if product_added webhook, see if it belongs to a certain bundle sale, add **shadow products** for this product. Meanwhile, update productInfo.txt / collectionInfo.txt / addedProduct.txt
+      + if product_added webhook, see if it belongs to a certain bundle sale, add **"shadow products"** for this product. Meanwhile, update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
  ### Related File:
    1. addBundle.php  --- add new bundle sales
-      + update shopBundle.txt / addedProduct.txt
+      + update shopBundle.txt / shadowToOrigin.txt
       + make REST calls to Shopify server to modify shop.metafield for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
+      + make REST calls to Shopify server to add product.metafield about added shadow productID and its bundleID into original product
       + (_Pending_) update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
    1. deleteBundle.php --- delete specific bundle
       + same as addBundle.php
-   1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / addedProduct.txt
+   1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
    1. productInfo.txt  ---**write based on webhook**  --- could be updated due to webhook events
    1. collectionInfo.txt   --- **write based on webhook**  --- could be updated due to webhook events
    1. shopBundle.txt  --- **read/write** --- updated by addBundle.php / deleteBundle.php
-   1. addedProduct.txt --- **read/write** --- keep track of added products, in case app uninstall; Also update original product inventory
+   1. shadowToOrigin.txt --- **read/write** --- keep track of added shadow products, update original product inventory
+      + format : shadowProductID, originalProductID
+   1. bundleToShadow.txt --- **read/write** --- in case certain bundle deletion or app uninstall
+      + format : bundleID, shadowProductID_1, shadowProductID_2, ...
  ### Work Flow:
-   1. receive newly POST bundleInfo, check request type: only add? OR only delete? OR both add&delete?
-   2. read in advance info about shopBundle.txt / addedProduct.txt
-   2. add Bundle:
- ## Files relationship
-   1. shopBundle.txt <----> addedProduct.txt, they have opposite (key:value) pairs intentionally for later ease use
-   (bundleID, bundleNum, productID_discount pairs)   <----->   ( productID, originalProductID, bundleID )
+   1. first read into shopBundle.txt / shadowToOrigin.txt, for later use
+   2. receive newly POST bundleInfo, check request type: add/ delete/ add&delete ?
+   2. when add Bundle:
+      + create unique bundleID, and append it with POST parameters; update shopBundle.txt
+      + update bundleToShadow.txt / shadowToOrigin.txt
+      + make REST calls to update shop.metafield
+      + make REST calls to shop.metafield.originToShadow
+      + make REST calls to add **"shadow products"** in current shop
+   3. when delete Bundle:
+      + read POST parameter['bundleID'], find out which bundle need to be deleted
+      + delete it from shopBundle.txt
+      + make REST calls to update shop.metafield.bundleInfo
+      + make REST calls to update shop.metafield.originToShadow
+      + make REST calls to delete **"shadow products"** in current shop, based on bundleToShadow.txt,
+      + delete it from bundleToShadow.txt / shadowToOrigin.txt
+   4. when merchants edit/add a new product, tigger product create/update/delete events, Shopify server POST json data to this app backend file webhookHandler.php. webhookHandler.php do the following things:
+      + if add a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, add 
+ ### Files relationship
+   1. shopBundle.txt is the source info of shopify.metafield.bundleInfo
+   3. shadowToOrigin.txt <----> shopify.metafield.originToShadow, they have opposite key:value pairs
+   4. bundleToShadow.txt ---> shadowToOrigin.txt , from this we could find all involved origin products
  ## IIII. Related shopify object for current shop
  ### shop.metafield
    1. bundleInfo(namespace)->(key, value)
-      + bundleNum, int( i.e. 2 )
-      + bundleDetail, string ( bundleID , item num, productID and discount pairs,bundleID , item num, productID and discount pairs )
+   bundle_detect.liquid will first read this to find out existing bundles, used to detect available bundles from products in cart.
+      + bundleNum, int( e.g  2 )
+      + bundleDetail, string ( bundleID , item num, productID and discount pairs, bundleID , item num, productID and discount pairs )
+   2. originToShadow(namespace)->(key, value)
+   When bundle_detect.liquid find out there exists a bundle, i.e. find out certain products needed to be changed into its **shadow** counterpart. We read this metafield of product, based on bundleID find out productID of its **shadow product**, then make cart AJAX to delete orginal, and add shadow product.
+      + originalProductID_1, str( bundleID, shadowProductID, bundleID, shadowProductID, )
+      + originalProductID_2, str( bundleID, shadowProductID, bundleID, shadowProductID, )
    2. cartProductHash(namespace)->(key, value)
-      + hashNum, int ( i.e. 3 )
+   act like a HashMap variable, used by bundle_detect.liquid to read/write/store for following code to check if there exists bundl
+      + hashNum, int ( e.g  3 )
       + hashDetail, string(productID,num,productID,num,productID,num)
    3. matchedProduct(namespace)->(key, value)
-      + matchedNum, int ( i.e. 2 )
+   when products in cart match certain bundle sales, save them in this variable. Then based on these info, make AJAX delete&add call to shopify server.
+      + matchedNum, int ( e.g  2 )
       + matchedDetail, string(productID,num,productID,num)
 
  ### 'bundleCheck.liquid' code snippet
-   1. function
+    1. function
+      + read shopify.metafield.bundleInfo to know existing bundles
+      + go through all items in cart, make a record of HashMap of ( productID, quantity )
+      + go through each existing bundles, with a certain bundle, do the following:
+        + check if cart product HashMap matches this certain bundle
+        + if YES, keep decrementing by 1, until one of the key's value of the HashMap become 0. Meanwhile, record the quantity.
 
  ### shadow product
-   1.
+    1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
+    2. other than the price attribute is different from original products, others information should be stay the same.
