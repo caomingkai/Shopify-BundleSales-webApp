@@ -95,7 +95,7 @@
       + make REST calls to delete **"shadow products"** in current shop, based on bundleToShadow.txt,
       + delete it from bundleToShadow.txt / shadowToOrigin.txt
    4. when merchants edit/add a new product, tigger product create/update/delete events, Shopify server POST json data to this app backend file webhookHandler.php. webhookHandler.php do the following things:
-      + if add a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, add 
+      + if add a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, add
  ### Files relationship
    1. shopBundle.txt is the source info of shopify.metafield.bundleInfo
    3. shadowToOrigin.txt <----> shopify.metafield.originToShadow, they have opposite key:value pairs
@@ -120,12 +120,12 @@
       + matchedDetail, string(productID,num,productID,num)
 
  ### 'bundleCheck.liquid' code snippet
-    1. function
+   1. function
       + read shopify.metafield.bundleInfo to know existing bundles
       + go through all items in cart, make a record of HashMap of ( productID, quantity )
       + go through each existing bundles, with a certain bundle, do the following:
-        + check if cart product HashMap matches this certain bundle
-        + if YES, keep decrementing by 1, until one of the key's value of the HashMap become 0. Meanwhile, record the quantity.
+          + check if cart product HashMap matches this certain bundle
+          + if YES, keep decrementing by 1, until one of the key's value of the HashMap become 0. Meanwhile, record the quantity.
 
  ### shadow product
     1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
