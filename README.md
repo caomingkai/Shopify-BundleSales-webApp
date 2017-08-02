@@ -112,10 +112,10 @@
     5. Webhook: update product inventory after customers pay off their order. This event also triggers a webhook POST from Shopify server.
       + loop through all line items in the order, check if there exists shadow products.
       + If YES, for each of such shadow products, do the following things:
-           + do a math to update the current quantity of this shadow product in productInfo.txt.
-           + based on shadowToOrigin.txt, find out its original product,
-           + make REST call to update the quantity of the original product in Shopify server.
-      + if No, do nothing.
+         + do a math to update the current quantity of this shadow product in productInfo.txt.
+         + based on shadowToOrigin.txt, find out its original product,
+         + make REST call to update the quantity of the original product in Shopify server.
+      + If No, do nothing.
  ### Files relationship
    1. shopBundle.txt is the source info of shopify.metafield.bundleInfo
    3. shadowToOrigin.txt <----> shopify.metafield.originToShadow, they have opposite key:value pairs
