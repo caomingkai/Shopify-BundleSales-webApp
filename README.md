@@ -140,7 +140,7 @@
       + matchedNum, int ( e.g  2 )
       + matchedDetail, string(productID,num,productID,num)
 
- ### 'bundleCheck.liquid' code snippet
+ ### bundleCheck.liquid code snippet
    1. function
       + read shopify.metafield.bundleInfo to know existing bundles
       + go through all items in cart, make a record of HashMap of ( productID, quantity )
