@@ -149,5 +149,5 @@
           + if YES, keep decrementing by 1, until one of the key's value of the HashMap become 0. Meanwhile, record the quantity.
 
  ### shadow product
-    1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
-    2. other than the price attribute is different from original products, others information should be stay the same.
+   1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
+   2. other than the price attribute is different from original products, others information should be stay the same.
