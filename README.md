@@ -160,5 +160,4 @@
    2. other than the price attribute is different from original products, others information should be stay the same.
    3. should have it's own metafield
         + metafield.originProduct
-        
-        have record of it's original product in case when a shadow product added but then it cannot make up a certain bundle due to its sibling deleted by customer later. That case, bundleCheck.liquid would change all shadow product back to their origin products
+          have record of it's original product in case when a shadow product added but then it cannot make up a certain bundle due to its sibling deleted by customer later. That case, bundleCheck.liquid would change all shadow product back to their origin products
