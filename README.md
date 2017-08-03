@@ -138,16 +138,26 @@
    3. matchedProduct(namespace)->(key, value)
    when products in cart match certain bundle sales, save them in this variable. Then based on these info, make AJAX delete&add call to shopify server.
       + matchedNum, int ( e.g  2 )
-      + matchedDetail, string(productID,num,productID,num)
+      + matchedDetail, string(productID,bundleID,num,productID,bundleID,num;)
 
  ### bundleCheck.liquid code snippet
-   1. function
-      + read shopify.metafield.bundleInfo to know existing bundles
-      + go through all items in cart, make a record of HashMap of ( productID, quantity )
-      + go through each existing bundles, with a certain bundle, do the following:
-          + check if cart product HashMap matches this certain bundle
-          + if YES, keep decrementing by 1, until one of the key's value of the HashMap become 0. Meanwhile, record the quantity.
+    1. read shopify.metafield.bundleInfo to know existing bundles
+    2. go through all items in cart, make a record of **product HashMap** of ( productID, quantity ) pairs
+        + check metafield.originProduct of each item, if it has such key and value, then it's a shadow product, we need to change it back to its original product, and product the product HashMap. In case products in cart make up a certain bundle, but later customer delete one of them, so we need to find out available bundle again.
+        + O(n) time complexity
+    1. loop through each existing bundles. for a certain bundle, do the following:
+        + "Exist?" check if cart product HashMap matches this certain bundle
+        + if YES ---> "How many?" keep decrementing by 1 from product HashMap's keyValue pairs, until one of the key's value of the HashMap become 0. Meanwhile, record the times of decrement, which is the quantity of this certain bundle.
+        + when a key(productID) in the product HashMap become 0, remove this keyValue pair from current product HashMap for following faster manipulation.
+        + if NO  ---> go to next iteration of the loop
+    1. after finishing the loop of all bundle patterns, we get the final bundle patterns with (productID, quantity) pairs Array for different bundle patterns. Store it in shop.metafield.matchedDetail. It's best to make AJAX call as we deal with each bundle pattern, since metafield don't have too much flexible set/put fashion.
+    1. we process matched products as we check certain bundle exist. **do the "delete origin" and "add shadow" AJAX call** to Shopify server. Since each change in cart(add/delete) will send POST call to Shopify server, here is the chance the liquid template be interpreted into <script> with a series of AJAX call to Shopify Server. So right after the html is sent to customer's browser, the AJAX would call to Shopify server right away, leading to the price change of related product.
+        + "delete origin AJAX" : based on shop.metafield.matchedNum and shop.metafield.matchedDetail, we could get the origin productID, and its quantity. Make a series of AJAX to delete them.
+        + "add shadow AJAX"  : in the last step, we find out original productID, bundleID and quantity, we now refer to shop.metafield.originToShadow to find out the shadow product. Make series of AJAX to add shadow products.
 
  ### shadow product
    1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
    2. other than the price attribute is different from original products, others information should be stay the same.
+   3. should have it's own metafield
+        + origin product
+        keep it's original product in case when a shadow product added but then it cannot make up a certain bundle due to its sibling deleted by customer later. That case, bundleCheck.liquid would change all shadow product back to their origin products
