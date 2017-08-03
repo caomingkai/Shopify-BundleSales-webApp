@@ -1,3 +1,4 @@
 $_SESSION["shopUrl"]      -  install.php
 $_SESSION["accessToken"]  -  install.php
-$_SESSION["shopUrl"]      -  index.php
+$_SESSION["collections"]  -  index.php
+$_SESSION["products"]     -  index.php

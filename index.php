@@ -7,7 +7,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <html>
     <head>
-
         <style>
           .empty { width:50px; }
         </style>
@@ -34,15 +33,13 @@
 
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
-    $myJSON = json_encode($shopify);
-
-
-
-
     // Get all product list (GET request)
     $collections = $shopify->CustomCollection->get();
 
     $products = $shopify->Product->get();
+    $_SESSION["collections"] = $collections;
+    $_SESSION["products"] = $products;
+
 
 //-----------------------Outter wrapper table------------------------
     echo '<table><tr>';
@@ -56,9 +53,16 @@
                     <th>Name</th>
                     <th>Image</th>
                 </tr>';
-        foreach($products as $p){
+        $itemNum = 0;
+        foreach($products as $k => $p){
+          $itemNum = $k;
           echo '<tr>
-                    <td><input type="checkbox" name="productItem" value="'.$p['id'].'">' .$p['title'].'</td>
+                    <td><input id="product'.$k.'" onchange="check()" type="checkbox" name="productItem[]" value="'.$p['id'].'">' .$p['title'].'
+                        <br>
+                        <div id="discountP'.$k.'"style="display:none" >
+                            <samll> percentage discount</samll>
+                            <input type="text" name="disount[]>
+                        </div>"  </td>
                     <td>' .$p['id']. '</td>
                     <td>' .$p['title']. '</td>
                     <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
@@ -87,7 +91,7 @@
                 </tr>';
         foreach($collections as $p){
           echo '<tr>
-                    <td><input type="checkbox" name="collectionItem" value="'.$p['id'].'">' .$p['title'].'</td>
+                    <td><input type="checkbox" name="collectionItem[]" value="'.$p['id'].'">' .$p['title'].'</td>
                     <td>' .$p['id']. '</td>
                     <td>' .$p['title']. '</td>
                     <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
@@ -127,7 +131,24 @@
 ?>
 
         <h1>
+          <?php
+            echo $itemNum;
+          ?>
             This is bottom
         </h1>
+
+        <script>
+        <?php
+          echo "function check() {"."\n";
+              echo 'for( $k=0; $k<'.$itemNum.'; $k++){'."\n";
+                  echo 'if(document.getElementById("product'.$k. '").checked){'."\n";
+                      echo 'document.getElementById("discountP'.$k. '").style.display = "inline";'."\n";
+                  echo '}else{'."\n";
+                      echo 'document.getElementById("discountP'.$k. '").style.display = "none";'."\n";
+                  echo '}'."\n";
+              echo '}'."\n";
+          echo '}'."\n";
+        ?>
+        </script>
     </body>
 </html>

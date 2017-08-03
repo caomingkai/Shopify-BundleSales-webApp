@@ -1,1 +1,3 @@
 3rdappstore.myshopify.com,478bfa52ca83cf8d4ec02cd312f49b66
+mingkai.myshopify.com,b4bf22b31caa8dd70551b354e6c3e76d
+appstoremk.myshopify.com,6cc7d5a5bcda54aad4821aadedfa27f3
