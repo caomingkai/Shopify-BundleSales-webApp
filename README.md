@@ -159,5 +159,5 @@
    1. it should be added with special vendor/tag information, in favor of giving merchants a way to hide all shadow products from storefront webpage.
    2. other than the price attribute is different from original products, others information should be stay the same.
    3. should have it's own metafield
-        + origin product
-        keep it's original product in case when a shadow product added but then it cannot make up a certain bundle due to its sibling deleted by customer later. That case, bundleCheck.liquid would change all shadow product back to their origin products
+        + metafield.originProduct
+        have record of it's original product in case when a shadow product added but then it cannot make up a certain bundle due to its sibling deleted by customer later. That case, bundleCheck.liquid would change all shadow product back to their origin products
