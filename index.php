@@ -50,13 +50,29 @@
 
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
-    // Get all product list (GET request)
     $collections = $shopify->CustomCollection->get();
-
     $products = $shopify->Product->get();
+
+    $_SESSION["config"] = $config;
     $_SESSION["collections"] = $collections;
     $_SESSION["products"] = $products;
 
+    // set collection "all", in order to exclude those shadow products
+    // 1. GET both CustomCollection and SmartCollection
+    // 2. find out the 'all' selection, which handle=='all',
+    // 3. Modify it. Add a condition: vendor not_equals 'Products On Sales'
+    // 3.1 try to see if condition: tag not_equals 'salesBy3rd' work?
+    // 4. $products = $shopify->Product()->get();
+    $collectionSet = array(
+      "title" => "all",
+      "rules" => array(
+        array(
+          "column" => "vendor",
+          "relation" => "equals",
+          "condition" => "Cult Products"
+        )
+      ),
+    );
     // check if {shopUrl}ProductInfo.txt exists
     $fileName = $_SESSION["shopUrl"] . "ProductInfo.txt";
     if( !file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
@@ -160,7 +176,9 @@
 
         <h1>
           <?php
-            echo $itemNum;
+            echo "<pre>";
+            print_r($shopify);;
+            echo "</pre>";
           ?>
             This is bottom
         </h1>
