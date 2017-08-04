@@ -16,7 +16,24 @@
         <h1>
             TEST FOR SHOPIFY WITH PHP
         </h1>
+<!-- ##1## Existing Bundle display area------------------------------------->
+        <div id="existingBundle">
+          Existing Bundle Display Area
+            <!--php read shopBundle.txt to find if exists bundle, show it-->
+            <!--If exist, show it-->
+            <!--If NO, it is after 'submit' clicked, the file is created -->
+        </div>
 
+<!-- ##2## items selection hidden window------------------------------------>
+        <div id="productInfo" style="display:none">
+          Item/Discount Select Area
+          <!-- need a non-hidden item/discount box pair to give merchants first input -->
+          <!-- later, when the 'add pairs' clicked, the next hidden pairs show up -->
+          <!-- format: clickable img, title, price -->
+          <!-- when merchant put cursor in the input box, the modal window show up -->
+          <!-- then he can choose items in the window, also in the window, there is a 'ok' button -->
+          <!-- when 'ok' clicked, it send selected items to the input box -->
+        </div>
 <?php
 
     require_once __DIR__ . '/vendor/autoload.php';
@@ -40,12 +57,28 @@
     $_SESSION["collections"] = $collections;
     $_SESSION["products"] = $products;
 
+    // check if {shopUrl}ProductInfo.txt exists
+    $fileName = $_SESSION["shopUrl"] . "ProductInfo.txt";
+    if( !file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
+      foreach( $products as $p ){
+        $info .= $p["id"] . "," . $p["title"] . "," . $p["image"]["src"] . "\n";
+        file_put_contents($fileName, $info, LOCK_EX);
+      }
+    }else{      // read from productInfo.txt
+      $file = "productInfo.txt";
+      $infoAll = file_get_contents($fileName);
+      echo "<pre>";
+      echo $infoAll;
+      echo "</pre>";
+    }
+
+
 
 //-----------------------Outter wrapper table------------------------
     echo '<table><tr>';
-//------------------This is for Product Bunlde Selection-------------
+//------------------ ##2## This is for Product Bunlde Selection-------------
     echo '<td>';
-        echo '<form action="restCall.php", method="get">';
+        echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Product Bundle:</legend>';
         echo '<table border="1", border-collapse="collapse"; >';
         echo '  <tr><th>Select</th>
@@ -57,12 +90,7 @@
         foreach($products as $k => $p){
           $itemNum = $k;
           echo '<tr>
-                    <td><input id="product'.$k.'" onchange="check()" type="checkbox" name="productItem[]" value="'.$p['id'].'">' .$p['title'].'
-                        <br>
-                        <div id="discountP'.$k.'"style="display:none" >
-                            <samll> percentage discount</samll>
-                            <input type="text" name="disount[]>
-                        </div>"  </td>
+                    <td><input id="product'.$k.'" onchange="check(event)" type="checkbox" name="productItem[]" value="'.$p['id'].'">' .$p['title'].'<br>'.'</td>
                     <td>' .$p['id']. '</td>
                     <td>' .$p['title']. '</td>
                     <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
@@ -81,7 +109,7 @@
 
 //------------------This is for Collection Bunlde Selection-------------
     echo '<td>';
-        echo '<form action="restCall.php", method="get">';
+        echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Collection Bundle:</legend>';
         echo '<table border="1">';
         echo '  <tr><th>Select</th>
@@ -98,7 +126,7 @@
                 </tr>';
         }
         echo '</table>';
-        echo '<input type="submit" value="Submit"> ';
+        echo '<input type="submit" onclick="validCheck()" value="Submit"> ';
         echo '</fieldset>';
         echo '</form>';
     echo '</td>';
@@ -139,14 +167,27 @@
 
         <script>
         <?php
-          echo "function check() {"."\n";
-              echo 'for( $k=0; $k<'.$itemNum.'; $k++){'."\n";
-                  echo 'if(document.getElementById("product'.$k. '").checked){'."\n";
-                      echo 'document.getElementById("discountP'.$k. '").style.display = "inline";'."\n";
-                  echo '}else{'."\n";
-                      echo 'document.getElementById("discountP'.$k. '").style.display = "none";'."\n";
-                  echo '}'."\n";
-              echo '}'."\n";
+          echo "function check(event) {"."\n";
+            echo "if( event.target.nextElementSibling.nextElementSibling == null ){"."\n";
+              echo "if( event.target.checked ){ "."\n";
+                echo 'x = document.createElement("input");'."\n";
+                echo 'x.setAttribute("type", "text");'."\n";
+                echo 'x.setAttribute("class", "productDiscount");'."\n";
+                echo 'x.setAttribute("name", "productDiscount[]");'."\n";
+                echo 'x.setAttribute("value", "1");'."\n";
+                echo 'event.target.closest("td").appendChild(x);'."\n";
+              echo "}"."\n";
+            echo "}else{"."\n";
+              echo "if( !event.target.checked ){ "."\n";
+                echo 'checkboxParent = event.target.closest("td");'."\n";
+                echo 'checkboxParent.removeChild(checkboxParent.lastChild);'."\n";
+              echo "}"."\n";
+            echo "}"."\n";
+          echo '}'."\n";
+
+
+          echo "function validCheck() {"."\n";
+
           echo '}'."\n";
         ?>
         </script>

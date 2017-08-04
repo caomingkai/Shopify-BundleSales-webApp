@@ -45,7 +45,7 @@
       echo "<pre>";
         print_r( $newAddedProduct );
       echo "</pre>";
-echo '<p> ----------- ------------------------------  </p>' .  "\n";
+echo '<p> ----------------------------------------  </p>' .  "\n";
       $variantAdded = array(
             "option1" =>  "4",
             "option2" =>  "bbbb",

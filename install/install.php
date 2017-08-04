@@ -75,8 +75,8 @@
           $shopUrl = $_GET['shop'];
           $scopes = "read_orders,read_products,write_products";
 
-          $instalUrl = "https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php";
-          header("Location: $instalUrl");
+          $installUrl = "https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php";
+          header("Location: $installUrl");
           exit();
       }
 
@@ -91,7 +91,7 @@
           );
           PHPShopify\ShopifySDK::config($config);
           $accessToken = \PHPShopify\AuthHelper::getAccessToken();
-
+          
           $current = file_get_contents($file);
           $current .= $_GET['shop']. "," .$accessToken."\n";
           file_put_contents($file, $current,LOCK_EX);
