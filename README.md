@@ -65,9 +65,9 @@
  ### Related File:
    1. addBundle.php  --- add new bundle sales
       + update shopBundle.txt / shadowToOrigin.txt
-      + make REST calls to Shopify server to modify shop.metafield for this shop
+      + make REST calls to Shopify server to modify shop.metafield.bundleInfo for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
-      + make REST calls to Shopify server to add product.metafield about added shadow productID and its bundleID into original product
+      + make REST calls to Shopify server to add shop.metafield.originToShadow about added shadow productID and its bundleID into original product
       + (_Pending_) update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
    1. deleteBundle.php --- delete specific bundle
       + same as addBundle.php
@@ -86,7 +86,7 @@
    2. receive newly POST bundleInfo, check request type: add/ delete/ add&delete ?
    2. when add Bundle:
       + create unique bundleID, and append it with POST parameters; update shopBundle.txt
-      + make REST calls to update shop.metafield
+      + make REST calls to update shop.metafield.bundleInfo
       + make REST calls to add **"shadow products"** in current shop
       + make REST calls to shop.metafield.originToShadow
       + update bundleToShadow.txt / shadowToOrigin.txt

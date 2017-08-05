@@ -14,7 +14,7 @@
       $num = sizeof( $p );
 
 //-------- ## 1 ## Put this new added bundle into file: {shopUrl}ShopBundle.txt------
-      $BundleID = uniqid() . ","; // unique ID
+      $BundleID = uniqid(); // unique ID
       $BundleInfo = $num;
       for($i=0; $i<$num; $i++){
         $BundleInfo .= "," . $p[$i] . "," . $pd[$i];
@@ -24,7 +24,7 @@
       $fileName = $_SESSION["shopUrl"] . "ShopBundle.txt";
       if( !file_exists( $fileName ) ){ // create {shopUrl}ShopBundle.txt
         $bundleExistFlag = false;
-        $bundle = $BundleID . $BundleInfo;
+        $bundle = $BundleID . "," . $BundleInfo;
         file_put_contents($fileName, $bundle, LOCK_EX);
       }else{                           // read from productInfo.txt
         $infoAll = file_get_contents($fileName);
@@ -32,7 +32,7 @@
         if(strpos($infoAll, $BundleInfo) === false){
           $bundleExistFlag = false;
           $existBundle = file_get_contents($fileName);
-          $existBundle .= $BundleID . $BundleInfo;
+          $existBundle .= $BundleID . "," . $BundleInfo;
           file_put_contents($fileName, $existBundle, LOCK_EX);
         }
       }
@@ -45,7 +45,9 @@
                                                     for ($i=0; $i < $numOfBundle; $i++) {
                                                        echo '<h1> Bundle' .$i. ': ' .$existBundleArray[$i]. "</h1>\n";
                                                     }
+
 //--------## 2 ## make REST call to update shop.metafield.bundleInfo for this shop ----------------
+
       //shop.metafield.bundleInfo.bundleNum
       $metaBundleNum = array(
         "namespace" => "bundleInfo",
@@ -66,11 +68,27 @@
                                                       echo "<pre>"."\n";
                                                         print_r($shopify->Metafield->get());
                                                       echo "</pre>"."\n";
-//--------## 3 ## make REST call to add shadow product based on submitted bundle-----
+                                                      echo "<pre>"."\n";
+
+                                                      echo "----------------------------"."\n";
+                                                      $para = array(
+                                                        "namespace" => "inventory",
+                                                        "key" => "222"
+                                                      );
+                                                      $t = $shopify->Metafield()->get($para);
+                                                      print_r(count($t));
+
+                                                      print_r($t["bundleInfo"]["bundleNum"]);
+                                                      echo "----------------------------"."\n";
+                                                      echo "</pre>"."\n";
+
+//--------## 3 ##  make REST call to add shadow product based on submitted bundle------------------------
+//--------## 4 ##  make REST call to add shop.metafield.originToShadow based on new added shadow---------
+
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
-        $shadowToOriginInfo = "";                         // for 'shadowToOrigin.txt'
-        $bundleToShadowInfo = substr($BundleID, 0, -1) ;  // rip off ',', for 'shadowToOrigin.txt'
+        $shadowToOriginInfo = "";                 // for 'shadowToOrigin.txt'
+        $bundleToShadowInfo = $BundleID;          // for 'shadowToOrigin.txt'
 
                                                         echo "<h1>" . $pairArray[0] * 2 .  "</h1>"."\n";
         for( $i=1; $i<$pairArray[0] * 2; $i+=2){
@@ -99,6 +117,37 @@
           // POST detail object to add shadow product to shop
           $shadowProduct = $shopify->Product()->post($originProduct);
           $shadowProductID = $shadowProduct['id'];
+
+          // GET shop.metafield.originToShadow.originProductID if it exist, otherwise create it
+          $para = array(
+            "namespace" => "originToShadow",
+            "key" => $originProductID
+          );
+          $thisField = $shopify->Metafield()->get($para);
+          $shadowString = "";
+          if( count($thisField) > 0 ){
+            $shadowString = $thisField["originToShadow"][$originProductID] . "," . $BundleID . "," . $shadowProductID;
+            $para["value"] = $shadowString;
+            $para["value_type"] = "string";
+            $thisField = $shopify->Metafield()->post($para);
+                                                        echo "<h1> origin to shadow  </h1>"."\n";
+                                                        echo "<pre>"."\n";
+                                                          print_r($thisField);
+                                                        echo "</pre>"."\n";
+                                                        echo "<h1> ---------------------------- </h1>"."\n";
+          }else{
+            $shadowString = $BundleID . "," . $shadowProductID;
+            $para["value"] = $shadowString;
+            $para["value_type"] = "string";
+            $thisField = $shopify->Metafield()->post($para);
+                                                        echo "<h1> origin to shadow  </h1>"."\n";
+                                                        echo "<pre>"."\n";
+                                                          print_r($thisField);
+                                                        echo "</pre>"."\n";
+                                                        echo "<h1> ---------------------------- </h1>"."\n";
+          }
+
+          // $originToShadowInfo .=
           $shadowToOriginInfo .= $shadowProductID . "," . $originProductID . "\n" ;
           $bundleToShadowInfo .=  ","  . $shadowProductID ;
                                                         echo "<h1> Shadow Product </h1>"."\n";
@@ -108,7 +157,8 @@
                                                         echo "<h1> ---------------------------- </h1>"."\n";
         } // end 'for'
 
-//--------## 4 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' -----
+//--------## 5 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
+
         $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "ShadowToOrigin.txt";
         $fileNameBundleToShadow = $_SESSION["shopUrl"] . "BundleToShadow.txt";
 
@@ -124,6 +174,10 @@
           $bundleToShadowExist .= $bundleToShadowInfo . "\n";
           file_put_contents($fileNameBundleToShadow, $bundleToShadowExist, LOCK_EX);
         }
+
+
+//--------## 5 ## make REST call to add shop.metafield.originToShadow  -----
+        // 1. loop through all origin product GET shop.metafield.originToShadow.
 
       }else{
                                                         echo "<h1> Submitted bundle already exist! </h1>"."\n";
