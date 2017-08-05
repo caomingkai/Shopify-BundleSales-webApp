@@ -1,7 +1,7 @@
 # Custom Bundle Sales Web Application
 
  WorkFlowy: https://workflowy.com/s/HdnT.62VuPVlGWh
- 
+
  Using PHP Shopify SDK:https://github.com/phpclassic/php-shopify/blob/master/README.md
 
  ## I. OAuth process
@@ -103,7 +103,10 @@
           + make REST calls to shop.metafield.originToShadow
           + update bundleToShadow.txt / shadowToOrigin.txt
       + if _edit_ an existing product, check if the following things are modified:
+          + [08/04/17] Basically, as long as there are changes, old shadow product should be deleted, and add new shadow product.
           + if **price** is changed, update productInfo.txt / collection.txt
+          + [08/04/17] update shop.metafield.originToShadow, i.e. delete old mapping, update new mapping
+          + [08/04/17] update bundleToShadow.txt / shadowToOrigin.txt
           And If this product belongs to a certain bundle, have to call REST call to change its shadow product's price
           + if **collection** is changed, update productInfo.txt / collection.txt;
           And If this product belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle; loop check if now it belongs to a new bundle, have to call REST to add new shadow product, update bundleToShadow.txt / shadowToOrigin.txt

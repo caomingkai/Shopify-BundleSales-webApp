@@ -16,7 +16,7 @@
         <h1>
             TEST FOR SHOPIFY WITH PHP
         </h1>
-<!-- ##1## Existing Bundle display area------------------------------------->
+<!-- ## 1 ## Existing Bundle display area------------------------------------->
         <div id="existingBundle">
           Existing Bundle Display Area
             <!--php read shopBundle.txt to find if exists bundle, show it-->
@@ -24,7 +24,7 @@
             <!--If NO, it is after 'submit' clicked, the file is created -->
         </div>
 
-<!-- ##2## items selection hidden window------------------------------------>
+<!-- ## 2 ## items selection hidden window------------------------------------>
         <div id="productInfo" style="display:none">
           Item/Discount Select Area
           <!-- need a non-hidden item/discount box pair to give merchants first input -->
@@ -50,29 +50,76 @@
 
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
-    $collections = $shopify->CustomCollection->get();
-    $products = $shopify->Product->get();
-
+    $customCollection = $shopify->CustomCollection->get();
+    $smartCollection = $shopify->SmartCollection->get();
+    $collection = array_merge($customCollection, $smartCollection);
     $_SESSION["config"] = $config;
-    $_SESSION["collections"] = $collections;
+    $_SESSION["collection"] = $collection;
+                                    echo "<pre>";
+                                    echo '<h1>customCollection:</h1>'."\n";
+                                    print_r($customCollection);
+                                    echo "</pre>";
+
+                                    echo "<pre>";
+                                    echo '<h1>smartCollection:</h1>'."\n";
+                                    print_r($smartCollection);
+                                    echo "</pre>";
+    // check if exists all in smartCollection
+    $numOfSmartC = sizeof($smartCollection);
+    $all_ExistFlag = false;
+    $all_CollectionID = "";
+    for( $i = 0; $i < $numOfSmartC; $i++ ){
+      if( $smartCollection[$i]['handle'] === 'all' ){
+        $all_ExistFlag = true;
+        $all_collectionID = $smartCollection[$i]['id'];
+        break;
+      }
+    }
+
+    // remove shadow product from 'all' collection
+    if( $all_ExistFlag ){
+      $updateInfo = array(
+        "published_scope" => "global",
+        "rules" => array(
+          array(
+            "column" => "vendor",
+            "relation" => "not_equals",
+            "condition" => "Products On Sales"
+          )
+        ),
+      );
+      $all_update = $shopify->SmartCollection($all_collectionID)->put($updateInfo);
+    }else{
+      $all_Info = array(
+        "title" => "all",
+        "published_scope" => "global",
+        "rules" => array(
+          array(
+            "column" => "vendor",
+            "relation" => "not_equals",
+            "condition" => "Products On Sales"
+          )
+        ),
+      );
+      $all_create = $shopify->SmartCollection($all_CollectionID)->post($all_Info);
+      $all_collectionID = $all_create['id'];
+    }
+
+
+    // get 'original' products with query string 'collectionId = all'
+    $params = array(
+      'collection_id' => $all_collectionID,
+    );
+
+    $products = $shopify->Product->get($params);
     $_SESSION["products"] = $products;
 
     // set collection "all", in order to exclude those shadow products
     // 1. GET both CustomCollection and SmartCollection
     // 2. find out the 'all' selection, which handle=='all',
     // 3. Modify it. Add a condition: vendor not_equals 'Products On Sales'
-    // 3.1 try to see if condition: tag not_equals 'salesBy3rd' work?
     // 4. $products = $shopify->Product()->get();
-    $collectionSet = array(
-      "title" => "all",
-      "rules" => array(
-        array(
-          "column" => "vendor",
-          "relation" => "equals",
-          "condition" => "Cult Products"
-        )
-      ),
-    );
+
     // check if {shopUrl}ProductInfo.txt exists
     $fileName = $_SESSION["shopUrl"] . "ProductInfo.txt";
     if( !file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
@@ -92,7 +139,7 @@
 
 //-----------------------Outter wrapper table------------------------
     echo '<table><tr>';
-//------------------ ##2## This is for Product Bunlde Selection-------------
+//------------------ ## 3 ## This is for Product Bunlde Selection-------------
     echo '<td>';
         echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Product Bundle:</legend>';
@@ -118,12 +165,12 @@
         echo '</form>';
     echo '</td>';
 
-//------------------This is deliberately left empty  ------------------
+    //This is deliberately left empty
     echo '<td>';
         echo '<div class="empty"> </div>';
     echo '</td>';
 
-//------------------This is for Collection Bunlde Selection-------------
+//------------------## 4 ## This is for Collection Bunlde Selection-------------
     echo '<td>';
         echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Collection Bundle:</legend>';
@@ -133,13 +180,15 @@
                     <th>Name</th>
                     <th>Image</th>
                 </tr>';
-        foreach($collections as $p){
-          echo '<tr>
-                    <td><input type="checkbox" name="collectionItem[]" value="'.$p['id'].'">' .$p['title'].'</td>
-                    <td>' .$p['id']. '</td>
-                    <td>' .$p['title']. '</td>
-                    <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
-                </tr>';
+        foreach($collection as $c){
+          if( $c['title'] !== 'all' ){ // not show the 'all' collection, no meaninng.
+            echo '<tr>
+                      <td><input type="checkbox" name="collectionItem[]" value="'.$c['id'].'">' .$c['title'].'</td>
+                      <td>' .$c['id']. '</td>
+                      <td>' .$c['title']. '</td>
+                      <td><img src=" ' .$c['image']['src']. ' "; style="width:128px;height:128px;"></td>
+                  </tr>';
+          }
         }
         echo '</table>';
         echo '<input type="submit" onclick="validCheck()" value="Submit"> ';
@@ -149,27 +198,27 @@
     echo '</tr></table>';
 
 
-//--------------------- display shop obj---------------------------
-    echo '<h1>1.  $shopify below : </h1>' .  "\n";
-    echo "<pre>";
-    print_r($shopify->Metafield);
-    echo "</pre>";
-    echo '<p> ------------------------  </p>' .  "\n";
+                            //--------------------- display shop obj---------------------------
+                                echo '<h1>1.  $shopify below : </h1>' .  "\n";
+                                echo "<pre>";
+                                print_r($shopify->Metafield);
+                                echo "</pre>";
+                                echo '<p> ------------------------  </p>' .  "\n";
 
-//--------------------- display $collection obj---------------------
-    echo '<h1>2.  $collections below : </h1>' . "\n";
-    echo "<pre>";
-    print_r($collections);
-    echo "</pre>";
-    echo '<p> ------------------------  </p>' .  "\n";
-    echo "</pre>";
+                            //--------------------- display $collection obj---------------------
+                                echo '<h1>2.  $collection below : </h1>' . "\n";
+                                echo "<pre>";
+                                print_r($collection);
+                                echo "</pre>";
+                                echo '<p> ------------------------  </p>' .  "\n";
+                                echo "</pre>";
 
-//--------------------- display $collection obj---------------------
-    echo '<h1>3.  $products below : </h1>' . "\n";
-    echo "<pre>";
-    print_r($products);
-    echo "</pre>";
-    echo '<p> ------------------------  </p>' .  "\n";
+                            //--------------------- display $product obj---------------------
+                                echo '<h1>3.  $products below : </h1>' . "\n";
+                                echo "<pre>";
+                                print_r($products);
+                                echo "</pre>";
+                                echo '<p> ------------------------  </p>' .  "\n";
 
 
 ?>
@@ -183,6 +232,7 @@
             This is bottom
         </h1>
 
+        // js function: when click checkbox, automatically add a input box; when unclick, remove the input box below it.
         <script>
         <?php
           echo "function check(event) {"."\n";
