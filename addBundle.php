@@ -7,6 +7,9 @@
     $shopify = new PHPShopify\ShopifySDK;
     $bundleExistFlag = true;  // assume this bundle already exist, ie. it's duplicate
 
+    echo "----------------------------"."\n";
+    echo '<a href="/Shopify/3rdapp_public/BundleCheckInject.php">jump to BundleCheckInject.php page.</a>'."\n";
+    echo "----------------------------"."\n";
 //===================Deal with Product Bundle Sales=====================
     if( isset( $_GET['productItem'] )){
       $p  = $_GET['productItem'];

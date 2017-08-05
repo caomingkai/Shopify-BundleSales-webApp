@@ -1,8 +1,0 @@
-8672070661,a,https://cdn.shopify.com/s/files/1/2220/3709/products/4_db4861a0-12f1-4c6c-87ff-d33623873d4d.jpg?v=1501486990
-8676583045,a - copy,https://cdn.shopify.com/s/files/1/2220/3709/products/4_7252f833-0198-4485-bed4-2f96bdd7de51.jpg?v=1501527272
-8640153925,b,https://cdn.shopify.com/s/files/1/2220/3709/products/5.jpg?v=1501288385
-8676588869,b - copy,https://cdn.shopify.com/s/files/1/2220/3709/products/5_95182295-0e4c-485f-88e5-84ba09361acb.jpg?v=1501527315
-8640159173,c,https://cdn.shopify.com/s/files/1/2220/3709/products/3.jpg?v=1501288399
-8656449477,d,https://cdn.shopify.com/s/files/1/2220/3709/products/6.jpg?v=1501288425
-8640152773,e,https://cdn.shopify.com/s/files/1/2220/3709/products/4.jpg?v=1501288345
-8672271621,f,https://cdn.shopify.com/s/files/1/2220/3709/products/5_e5253c7f-7258-4980-9501-038a5f0fa0ea.jpg?v=1501489604

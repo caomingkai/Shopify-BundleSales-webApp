@@ -13,7 +13,7 @@
 //####################### global variants########################################
     $installed_flag = false;
     // $appUrl = "http://testphp-env.us-west-1.elasticbeanstalk.com/";
-    $appUrl = "http://d5498b14.ngrok.io/Shopify/3rdapp_public/";
+    $appUrl = "http://1ae86075.ngrok.io/Shopify/3rdapp_public/";
     $apiKey = "cce15a09be6e4a0525ba0f0b0ca14341";
     $secretKey = "d999981624124eb6b1a902a063a9e8ea";
     $shopUrl = " ";
@@ -73,7 +73,7 @@
       // we need to redirect merchant to the oauth page to let merchant to grant authorization to the app.
       if( isset($_GET['shop'])  && !isset($_GET['code']) ){
           $shopUrl = $_GET['shop'];
-          $scopes = "read_orders,read_products,write_products";
+          $scopes = "read_orders,read_products,write_products,read_themes,write_themes";
 
           $installUrl = "https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php";
           header("Location: $installUrl");
@@ -91,7 +91,7 @@
           );
           PHPShopify\ShopifySDK::config($config);
           $accessToken = \PHPShopify\AuthHelper::getAccessToken();
-          
+
           $current = file_get_contents($file);
           $current .= $_GET['shop']. "," .$accessToken."\n";
           file_put_contents($file, $current,LOCK_EX);
