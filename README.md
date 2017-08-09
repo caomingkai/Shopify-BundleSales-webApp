@@ -75,9 +75,9 @@
          + 2. [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
          + 3. [invisible] metafiled.originToShadow
       + files related to "1-shadow variant"
-         + 1. bundleToShadow.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
+         + bundleToShadow.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
       + files related to "2-metafield.bundleInfo.bundleNum   |   ~.bundleDetail "
-         + 1. shopBundle.txt: this file includes metaID and bundleInfo content
+         + shopBundle.txt: this file includes metaID and bundleInfo content
       + files related to "3-metafiled.originToShadow"
          + 1. bundleToOriginProduct.txt
          + 2. originProductToMeta.txt
