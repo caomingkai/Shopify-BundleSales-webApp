@@ -34,7 +34,7 @@
       $fileName = $_SESSION["shopUrl"] . "ShopBundle.txt";
       if( !file_exists( $fileName ) ){ // create {shopUrl}ShopBundle.txt
         $bundleExistFlag = false;
-        $bundle = $BundleID . "," . $BundleInfo;
+        $bundle = $BundleID . "#" . $BundleInfo;
         file_put_contents($fileName, $bundle, LOCK_EX);
       }else{                           // read from productInfo.txt
         $infoAll = file_get_contents($fileName);
@@ -63,17 +63,7 @@
 
 //--------## 2 ## make REST call to update shop.metafield.bundleInfo for this shop ----------------
 //--------## 2 ## make REST call to update shop.metafield.bundleInfo for this shop ----------------
-      // keep track of added Metafield
-      $metafieldID = "";
-      //shop.metafield.bundleInfo.bundleNum
-      $metaBundleNum = array(
-        "namespace" => "bundleInfo",
-        "key" =>  "bundleNum",
-        "value" =>  $numOfBundle,
-        "value_type" => "integer",
-      );
-      $bundleNumMeta = $shopify->Metafield->post($metaBundleNum);
-      $metafieldID .= $bundleNumMeta['id'] . "\n";
+
       //shop.metafield.bundleInfo.bundleDetail
       $metaBundleDetail = array(
         "namespace" => "bundleInfo",
@@ -99,8 +89,8 @@
 
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
-        $shadowToOriginInfo = "";                 // for 'shadowToOrigin.txt'
-        $bundleToShadowInfo = $BundleID;          // for 'shadowToOrigin.txt'
+        $shadowToOriginInfo = "";                 // for 'shadowVToOriginV.txt'
+        $bundleToShadowInfo = $BundleID;          // for 'bundleToShadowP.txt'
 
         for( $i=0; $i<sizeof($pairArray); $i++){
           $pair = explode(":" , $pairArray[$i] );

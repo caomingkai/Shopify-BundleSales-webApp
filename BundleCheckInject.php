@@ -86,7 +86,7 @@ $codeInject = '<script>
                                               {% break %}
                                          {% endif %}
                                     {%endfor%}
-                                    // find out its corresponding shadow productID for this line_item
+<!-- ## 5 ## find out its corresponding shadow productID for this line_item  -->
                                     {% assign itemShadowID = "" %}
                                     {% assign shadowProductArray = shop.metafield.originToShadow[item.product_id] | split: ","  %}
                                     {% for bundleProductPair in shadowProductArray %}
@@ -121,7 +121,7 @@ $codeInject = '<script>
                         {% endif %}
                     {%endfor%}
 
-              </script>;
+              </script>';
 
 //-------------------------------------------------------------------------------
     $para = array(
@@ -132,7 +132,7 @@ $codeInject = '<script>
 
 
 
-//-----## 2 ## insert the statement: {% include 'bundleCheck' %} to 'theme.liquid' file
+//-----## 2  ## insert the statement: {% include "bundleCheck" %} to "theme.liquid" file  -->
     // find out theme.liquid, based on themeID already got
     $para = array(
       "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
