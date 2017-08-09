@@ -73,12 +73,18 @@
       + same as addBundle.php
    1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
-   1. productInfo.txt  ---**write based on webhook**  --- could be updated due to webhook events
+   1. productInfo.txt  --- **write based on webhook**  --- could be updated due to webhook events
    1. collectionInfo.txt   --- **write based on webhook**  --- could be updated due to webhook events
-   1. shopBundle.txt  --- **read/write** --- updated by addBundle.php / deleteBundle.php
-   1. shadowToOrigin.txt --- **read/write** --- keep track of added shadow products, update original product inventory
-      + format : shadowProductID, originalProductID
-   1. bundleToShadow.txt --- **read/write** --- in case certain bundle deletion or app uninstall
+   1. shopBundle.txt  --- **read/write** --- backup for shop.metafield.bundleInfo. updated by addBundle.php / deleteBundle.php
+   1. bundleToOriginProduct.txt --- **read/write** --- used when add/delete a certain bundleID
+   1. originProductToMeta.txt  --- **read/write** --- updated by addBundle.php / deleteBundle.php. Used when delete a certain bundle, to find the Meta need to update( meta and originVariantID are one-to-one mapping ),delete or add certain BDID:shadowVariantID
+      + format : originProductID: metaID_1, metaID_2, metaID_3
+   1. metaToShadowVariant.txt  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
+      + format :metaID, bundleID:shadowVariantID
+   1. shadowToOrigin.txt --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
+      + format : shadowVariantID, originVariantID
+
+   1. bundleToShadow.txt --- **read/write** --- keep track of __bundleID__ and __shadowProduct__, in case certain bundle deletion or app uninstall
       + format : bundleID, shadowProductID_1, shadowProductID_2, ...
 
  ### Work Flow:
@@ -89,7 +95,7 @@
       + make REST calls to update shop.metafield.bundleInfo
       + make REST calls to add **"shadow products"** in current shop
       + make REST calls to shop.metafield.originToShadow
-      + update bundleToShadow.txt / shadowToOrigin.txt
+      + update bundleToShadow.txt / shadowToOrigin.txt / originToShadow.txt
    3. when delete Bundle:
       + read POST parameter['bundleID'], find out which bundle need to be deleted
       + delete it from shopBundle.txt
@@ -133,8 +139,8 @@
       + bundleDetail, string ( bundleID , item num, productID and discount pairs, bundleID , item num, productID and discount pairs )
    2. originToShadow(namespace)->(key, value)
    When bundle_detect.liquid find out there exists a bundle, i.e. find out certain products needed to be changed into its **shadow** counterpart. We read this metafield of product, based on bundleID find out productID of its **shadow product**, then make cart AJAX to delete orginal, and add shadow product.
-      + originalProductID_1, str( bundleID, shadowProductID, bundleID, shadowProductID, )
-      + originalProductID_2, str( bundleID, shadowProductID, bundleID, shadowProductID, )
+      + origin variant ID_1, str( bundleID, shadow variant ID, bundleID, shadow variant tID )
+      + origin variant ID_2, str( bundleID, shadow variant tID, bundleID, shadow variant ID, ...)
    2. cartProductHash(namespace)->(key, value)
    act like a HashMap variable, used by bundle_detect.liquid to read/write/store for following code to check if there exists bundl
       + hashNum, int ( e.g  3 )

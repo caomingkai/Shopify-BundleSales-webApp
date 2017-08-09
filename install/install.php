@@ -13,11 +13,11 @@
 //####################### global variants########################################
     $installed_flag = false;
     // $appUrl = "http://testphp-env.us-west-1.elasticbeanstalk.com/";
-    $appUrl = "http://1ae86075.ngrok.io/Shopify/3rdapp_public/";
+    $appUrl = "http://9a6e602f.ngrok.io/Shopify/3rdapp_public/";
     $apiKey = "cce15a09be6e4a0525ba0f0b0ca14341";
     $secretKey = "d999981624124eb6b1a902a063a9e8ea";
-    $shopUrl = " ";
-    $accessToken = " ";
+    $shopUrl = "";
+    $accessToken = "";
 
 //############ read accessToken from 'merchantToken.txt'########################
 

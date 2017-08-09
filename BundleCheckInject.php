@@ -46,6 +46,84 @@
                           }
 
                   </script>';
+
+//-----## 1.1 ## updated code snippet to be inserted
+// 1. loop through cart items, to create product hashmap, store info in shop.metafield.cartHashmap, with key(variantID) / quantity pairs
+//    when we access it, we could use a loop
+// 2. read shop.metafield.bundleInfo.bundleNum / shop.metafield.bundleInfo.bundleDetail
+// 3. bundleDetail: 46#4212:0.4,3438:0.8,9842:0.2
+//                  47#1232:0.3,3294:0.5,3843,0.8
+//
+$codeInject = '<script>
+                    {% assign BDItems = shop.metafield.bundleInfo.bundleDetail | split:"\n"  %}
+
+<!-- ## 1 ## BDItem is one bundle item containing info -->
+                    {% for BDItem in BDItems %}
+                        {% assign BDID = BDItem | first %}
+                        {% assign BD = BDItem | last %}
+                        {% assign BDArray = BD | split:","  %}
+                        {% assign min = 1000000 %}
+
+<!-- ## 1.1 ## itemVariantID: find out which variant need to be exchanged for shadow product for this bundle -->
+                        {% assign itemVariantID = ""  %}
+                        {% assign itemShadowVariantID = ""  %}
+
+<!-- ## 2 ## BDOne is one pair of originProductID:discount  -->
+                        {% for BDOne in BDArray %}
+                            {% assign BDOneArray = BDOne | split:":"   %}
+                            {% assign BDOneProductId = BDOneArray | first  %}
+                            {% assign cnt = 0 %}
+
+<!-- ## 3 ## find out if there exists such bundle pattern in cart depending on cnt?=0 , meanwhile, record quantity of this combo -->
+                            {% for item in cart.items  %}
+                                {% if item.product_id ==  BDOneProductId  %}
+                                    {% assign cnt = cnt | plus: 1  %}
+<!-- ## 4 ## find out the postion of the variant located in product  -->
+                                    {% assign pos = 0 %}
+                                    {% for var in item.product.variants %}
+                                         {% assign pos = forloop.index0 %}
+                                         {% if var.id == item.variant.id  %}
+                                              {% break %}
+                                         {% endif %}
+                                    {%endfor%}
+                                    // find out its corresponding shadow productID for this line_item
+                                    {% assign itemShadowID = "" %}
+                                    {% assign shadowProductArray = shop.metafield.originToShadow[item.product_id] | split: ","  %}
+                                    {% for bundleProductPair in shadowProductArray %}
+                                        {% assign bundleProductArray = bundleProductPair | split: ":"  %}
+                                        {% assign bundleID = bundleProductArray | first  %}
+                                        {% assign shadowID = bundleProductArray | last   %}
+                                        {% if  bundleID == BDID %}
+                                            {% assign itemShadowID = shadowID %}
+                                            {% break %}
+                                        {% endif %}
+                                    {%endfor%}
+                                    {% assign itemShadowVariantID = product.variants[pos]
+                                    {% assign itemVariantID = itemVariantID | append: item.variant.id | append: "," %}
+                                {% endif %}
+                            {%endfor%}
+                            {% if cnt == 0  %}
+                                {% break %}
+                            {% else %}
+                                {% if cnt < min  %}
+                                    {% assign min = cnt %}
+                                {% endif %}
+                            {% endif %}
+                        {%endfor%}
+
+                        {% if min != 0 and min != 1000000 %}
+                            // 0. indicate this bundle has corresponding products in cart
+                            // 1. make REST call to delete orignial product variant based on itemVariantID
+                            // 2. make REST call to add corresponding shadow variant based on itemVariantID
+                            //    2.1 loop through itemVariantID to delete current variant item
+                            //    2.2 loop through itemProductID, to find its shadow productID, ->  .variants[]
+                            for
+                        {% endif %}
+                    {%endfor%}
+
+              </script>;
+
+//-------------------------------------------------------------------------------
     $para = array(
       "key" => "snippets/bundleCheck.liquid",
       "value" => $codeInject
