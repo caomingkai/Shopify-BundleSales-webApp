@@ -91,7 +91,7 @@
    1. originPToOriginV.txt  --- **read/write** --- Used when delete a certain bundle, to find the meta key 'originVariantID' need to updateed ,delete or add certain BDID:shadowVariantID
       + format : originProductID: originVariantID_1, originVariantID_2, originVariantID_3
    1. originVtoShadowV.txt  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
-      + format :metaID, bundleID:shadowVariantID
+      + [key] originVariantID_1  <--->  [value] bundleID_1:shadowVariantID_1,bundleID_2:shadowVariantID_2
    1. shadowVToOriginV.txt --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
       + format : shadowVariantID, originVariantID
 

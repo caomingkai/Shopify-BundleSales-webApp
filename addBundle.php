@@ -62,7 +62,6 @@
                                                     echo "</pre>"."\n";
 
 //--------## 2 ## make REST call to update shop.metafield.bundleInfo for this shop ----------------
-//--------## 2 ## make REST call to update shop.metafield.bundleInfo for this shop ----------------
 
       //shop.metafield.bundleInfo.bundleDetail
       $metaBundleDetail = array(
@@ -72,20 +71,21 @@
         "value_type" => "string",
       );
       $bundleDetailMeta = $shopify->Metafield->post($metaBundleDetail);
-      $metafieldID .= $bundleDetailMeta['id'] . "\n";
+      // $metafieldID .= $bundleDetailMeta['id'] . "\n";
 
-                                                      echo "<h1> 1 --- metafieldID :</h1>"."\n";
-                                                      echo "<pre>"."\n";
-                                                        print_r($metafieldID);
-                                                      echo "</pre>"."\n";
-                                                      echo "<pre>"."\n";
-
-                                                      echo "----------------------------"."\n";
+                                                      // echo "<h1> 1 --- metafieldID :</h1>"."\n";
+                                                      // echo "<pre>"."\n";
+                                                      //   print_r($metafieldID);
+                                                      // echo "</pre>"."\n";
+                                                      // echo "<pre>"."\n";
+                                                      //
+                                                      // echo "----------------------------"."\n";
 
 
 //--------## 3 ##  make REST call to add shadow product based on submitted bundle------------------------
 //--------## 4 ##  make REST call to add shop.metafield.originToShadow based on new added shadow---------
-//--------## 5 ##  update shop.metafieldID.txt based on response after those metafield been added ---------
+//--------## 5 ##  update OriginPToOriginV.txt based on response of GET(originPId) ---------
+//--------## 6 ##  update OriginVtoShadowV.txt based on response of POST for the added new shadow variants ---------
 
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
