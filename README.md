@@ -70,7 +70,19 @@
       + make REST calls to Shopify server to add shop.metafield.originToShadow about added shadow productID and its bundleID into original product
       + (_Pending_) update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
    1. deleteBundle.php --- delete specific bundle
-      + same as addBundle.php
+      + 3 things need to delete
+         + 1. [visible]  shadow variants
+         + 2. [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
+         + 3. [invisible] metafiled.originToShadow
+      + files related to "1-shadow variant"
+         + 1. bundleToShadow.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
+      + files related to "2-metafield.bundleInfo.bundleNum   |   ~.bundleDetail "
+         + 1. shopBundle.txt: this file includes metaID and bundleInfo content
+      + files related to "3-metafiled.originToShadow"
+         + 1. bundleToOriginProduct.txt
+         + 2. originProductToMeta.txt
+         + 3. metaToShadowVariant.txt
+         + 4. general idea: when delete a bundle, First check 'bundleToOriginProduct.txt', to find out what product are involved; Second based on 'originProductToMeta.txt', to find out what mataID involved; Third, based on 'metaToShadowVariant.txt', find out what shadow variant need to be deleted.
    1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
    1. productInfo.txt  --- **write based on webhook**  --- could be updated due to webhook events
