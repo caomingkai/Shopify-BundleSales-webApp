@@ -75,28 +75,28 @@
          + 2. [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
          + 3. [invisible] metafiled.originToShadow
       + files related to "1-shadow variant"
-         + bundleToShadow.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
+         + bundleToShadowP.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
       + files related to "2-metafield.bundleInfo.bundleNum   |   ~.bundleDetail "
          + shopBundle.txt: this file includes metaID and bundleInfo content
       + files related to "3-metafiled.originToShadow"
-         + 1. bundleToOriginProduct.txt
-         + 2. originProductToMeta.txt
-         + 3. metaToShadowVariant.txt
-         + 4. general idea: when delete a bundle, First check 'bundleToOriginProduct.txt', to find out what product are involved; Second based on 'originProductToMeta.txt', to find out what mataID involved; Third, based on 'metaToShadowVariant.txt', find out what shadow variant need to be deleted.
+         + 1. bundleToOriginP.txt
+         + 2. originPToMeta.txt
+         + 3. metaToShadowV.txt
+         + 4. general idea: when delete a bundle, First check 'bundleToOriginP.txt', to find out what product are involved; Second based on 'originPToMeta.txt', to find out what mataID involved; Third, based on 'metaToShadowV.txt', find out what shadow variant need to be deleted.
    1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
    1. productInfo.txt  --- **write based on webhook**  --- could be updated due to webhook events
    1. collectionInfo.txt   --- **write based on webhook**  --- could be updated due to webhook events
    1. shopBundle.txt  --- **read/write** --- backup for shop.metafield.bundleInfo. updated by addBundle.php / deleteBundle.php
-   1. bundleToOriginProduct.txt --- **read/write** --- used when add/delete a certain bundleID
-   1. originProductToMeta.txt  --- **read/write** --- updated by addBundle.php / deleteBundle.php. Used when delete a certain bundle, to find the Meta need to update( meta and originVariantID are one-to-one mapping ),delete or add certain BDID:shadowVariantID
+   1. bundleToOriginP.txt --- **read/write** --- used when add/delete a certain bundleID
+   1. originPToMeta.txt  --- **read/write** --- updated by addBundle.php / deleteBundle.php. Used when delete a certain bundle, to find the Meta need to update( meta and originVariantID are one-to-one mapping ),delete or add certain BDID:shadowVariantID
       + format : originProductID: metaID_1, metaID_2, metaID_3
-   1. metaToShadowVariant.txt  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
+   1. metaToShadowV.txt  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
       + format :metaID, bundleID:shadowVariantID
-   1. shadowToOrigin.txt --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
+   1. shadowVToOriginV.txt --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
       + format : shadowVariantID, originVariantID
 
-   1. bundleToShadow.txt --- **read/write** --- keep track of __bundleID__ and __shadowProduct__, in case certain bundle deletion or app uninstall
+   1. bundleToShadowP.txt --- **read/write** --- keep track of __bundleID__ and __shadowProduct__, in case certain bundle deletion or app uninstall
       + format : bundleID, shadowProductID_1, shadowProductID_2, ...
 
  ### Work Flow:

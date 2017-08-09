@@ -223,8 +223,8 @@
 
 //--------## 6 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
 
-        $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "ShadowToOrigin.txt";
-        $fileNameBundleToShadow = $_SESSION["shopUrl"] . "BundleToShadow.txt";
+        $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "shadowVToOriginV.txt";
+        $fileNameBundleToShadow = $_SESSION["shopUrl"] . "BundleToShadowP.txt";
         $fileNameMetafieldID = $_SESSION["shopUrl"] . "MetafieldID.txt";
 
         if( !file_exists( $fileNameMetafieldID ) ){ // create new file for the THREE
