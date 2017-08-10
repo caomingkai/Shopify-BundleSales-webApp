@@ -9,11 +9,15 @@
 
     echo "----------------------------"."\n";
     echo '<a href="/Shopify/3rdapp_public/BundleCheckInject.php">jump to BundleCheckInject.php page.</a>'."\n";
-    echo "----------------------------"."\n";
+    echo "----------------------------<br />"."\n";
 
     echo "----------------------------"."\n";
     echo '<a href="/Shopify/3rdapp_public/deleteBundle.php">deleteBundle</a>'."\n";
+    echo "----------------------------<br />"."\n";
+
     echo "----------------------------"."\n";
+    echo '<a href="/Shopify/3rdapp_public/deleteBundle.php?type=all">deleteBundle</a>'."\n";
+    echo "----------------------------<br />"."\n";
 
 //===================Deal with Product Bundle Sales=====================
     if( isset( $_GET['productItem'] )){
@@ -80,7 +84,6 @@
                                                       // echo "<pre>"."\n";
                                                       //
                                                       // echo "----------------------------"."\n";
-
 
 //--------## 3 ##  make REST call to add shadow product based on submitted bundle------------------------
 //--------## 4 ##  make REST call to add shop.metafield.originToShadow based on new added shadow---------
@@ -151,8 +154,8 @@
               $originToShadowInfo = $thisField[0]["value"]. "," . $BundleID . ":" . $shadowVariantID;
               $para["value"] = $originToShadowInfo;
               $para["value_type"] = "string";
-              $thisField = $shopify->Metafield()->post($para);
-                                                          echo "<h1> 4.1 --- origin to shadow  </h1>"."\n";
+              $thisField = $shopify->Metafield->post($para);
+                                                          echo "<h1> 4.1 -- [existed field] -- origin to shadow  </h1>"."\n";
                                                           echo "<pre>"."\n";
                                                             print_r($thisField);
                                                           echo "</pre>"."\n";
@@ -161,8 +164,8 @@
               $originToShadowInfo = $BundleID . ":" . $shadowVariantID;
               $para["value"] = $originToShadowInfo;
               $para["value_type"] = "string";
-              $thisField = $shopify->Metafield()->post($para);
-                                                          echo "<h1> 4.2 --- origin to shadow  </h1>"."\n";
+              $thisField = $shopify->Metafield->post($para);
+                                                          echo "<h1> 4.2 -- [new field] -- origin to shadow  </h1>"."\n";
                                                           echo "<pre>"."\n";
                                                             print_r($thisField);
                                                           echo "</pre>"."\n";
@@ -208,14 +211,14 @@
           file_put_contents($fileNameBundleToShadow, $bundleToShadowExist, LOCK_EX);
 
           // specially handle with $originVtoShadowVInfo, since we need to modify content, not just append
-          $keyPairNew =explode( "#" , $originVtoShadowVInfo );
-          $originVNew = $keyPairNew[0];
-          $shadowVStringNew =  $keyPairNew[1];
+          $triPairNew =explode( "#" , $originVtoShadowVInfo );
+          $metaNew = $triPairNew[1];
+          $shadowVStringNew =  $triPairNew[2];
           $originVtoShadowVExist = file_get_contents($fileNameOriginVtoShadowV);
 
-          $keyPos = strpos($originVtoShadowVExist, $originVNew);
-          if( $keyPos != false ){
-            $posInsert = $keyPos + strlen($originVNew) + 1;// 1->'#'
+          $metaPos = strpos($originVtoShadowVExist, $metaNew);
+          if( $metaPos != false ){
+            $posInsert = $metaPos + strlen($metaNew) + 1;// 1->'#'
             $originVtoShadowVNew = substr_replace($originVtoShadowVExist, $shadowVStringNew . ",", $pos, 0);
           }else{
             $originVtoShadowVNew .= $originVtoShadowVInfo . "\n";
