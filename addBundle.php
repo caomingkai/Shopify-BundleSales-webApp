@@ -155,7 +155,7 @@
               $para["value"] = $originToShadowInfo;
               $para["value_type"] = "string";
               $thisField = $shopify->Metafield->post($para);
-                                                          echo "<h1> 4.1 -- [existed field] -- origin to shadow  </h1>"."\n";
+                                                          echo "<h1> 4 -- [existed field] -- origin to shadow  </h1>"."\n";
                                                           echo "<pre>"."\n";
                                                             print_r($thisField);
                                                           echo "</pre>"."\n";
@@ -165,7 +165,7 @@
               $para["value"] = $originToShadowInfo;
               $para["value_type"] = "string";
               $thisField = $shopify->Metafield->post($para);
-                                                          echo "<h1> 4.2 -- [new field] -- origin to shadow  </h1>"."\n";
+                                                          echo "<h1> 4 -- [new field] -- origin to shadow  </h1>"."\n";
                                                           echo "<pre>"."\n";
                                                             print_r($thisField);
                                                           echo "</pre>"."\n";
