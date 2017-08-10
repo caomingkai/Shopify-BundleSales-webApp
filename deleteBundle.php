@@ -6,6 +6,11 @@
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
 
+
+//-------- ## -1 ## DELETE metafield --------
+
+
+
 //-------- ## 0 ## workflow fo DELETE --------
 // 1. when submit 'delete', POST a series of bundleID to this php script
 // 2. loop through POST['bundleID'], to produce an array of bundle to be deleted

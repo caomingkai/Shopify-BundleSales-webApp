@@ -84,15 +84,17 @@
 
 //--------## 3 ##  make REST call to add shadow product based on submitted bundle------------------------
 //--------## 4 ##  make REST call to add shop.metafield.originToShadow based on new added shadow---------
-//--------## 5 ##  update OriginPToOriginV.txt based on response of GET(originPId) ---------
+//--------## 5 ##  update OriginPtoOriginV.txt based on response of GET(originPId) ---------
 //--------## 6 ##  update OriginVtoShadowV.txt based on response of POST for the added new shadow variants ---------
 
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
-        $shadowToOriginInfo = "";                 // for 'shadowVToOriginV.txt'
         $bundleToShadowInfo = $BundleID;          // for 'bundleToShadowP.txt'
+        $shadowToOriginInfo = "";                 // for 'shadowVToOriginV.txt'
+        $originPtoOriginVInfo = "";               // for 'OriginPToOriginV.txt'
+        $originVtoShadowVInfo = "";               // for 'OriginVtoShadowV.txt'
 
-        for( $i=0; $i<sizeof($pairArray); $i++){
+        for( $i=0; $i<sizeof($pairArray); $i++){  // get each originProduct:discount pair
           $pair = explode(":" , $pairArray[$i] );
           $itemID   = $pair[0];
           $discount = $pair[1];
@@ -115,12 +117,20 @@
           $numOfVar = sizeof( $originProduct['variants'] );
 
           //------------------------------------------------------
+
+
+          // modify the price for shadow product , update $originPtoOriginVInfo
+          $originPtoOriginVInfo .= $originProductID . "#" ;
           $originVariantIDArray = array();
 
-          // modify the price for shadow product
           for( $j = 0; $j < $numOfVar; $j++ ){
             $originProduct['variants'][$j]['price'] = $originProduct['variants'][$j]['price'] * $discount;
-            $originVariantIDArray[$j] = $originProduct['variants'][$j]['id'];
+            $originVariantItem = $originProduct['variants'][$j]['id'];
+            $originVariantIDArray[$j] = $originVariantItem;
+            $originPtoOriginVInfo  .=   $originVariantItem . "," ;     // for 'OriginPtoOriginV.txt'
+          }
+          if( $numOfVar > 0 ){                   // get rid of last ","
+            $originPtoOriginVInfo = chop($originPtoOriginVInfo, "," );
           }
 
           // add shadow product to shop by making POST call
@@ -158,52 +168,11 @@
                                                           echo "</pre>"."\n";
                                                           echo "---------------------------- "."\n";
             }
-            $metafieldID .= $thisField['id'] . "\n";
+            $originVtoShadowVInfo .= $originVariantID . "#" . $thisField['id'] . "#" . $BundleID . ":" . $shadowVariantID . "\n";
             $shadowToOriginInfo .= $shadowVariantID . "," . $originVariantID . "\n" ;
           }
-          //------------------------------------------------------
-          /*
-          for( $j = 0; $j < $numOfVar; $j++ ){
-            $originProduct['variants'][$j]['price'] = $originProduct['variants'][$j]['price'] * $discount;
-          }
-
-          // POST detail object to add shadow product to shop
-          $shadowProduct = $shopify->Product()->post($originProduct);
-          $shadowProductID = $shadowProduct['id'];
-
-          // GET shop.metafield.originToShadow.originProductID if it exist, otherwise create it
-          $para = array(
-            "namespace" => "originToShadow",
-            "key" => $originProductID
-          );
-          $thisField = $shopify->Metafield()->get($para);
-          $shadowString = "";
-          if( count($thisField) > 0 ){
-            $shadowString = $thisField["originToShadow"][$originProductID] . "," . $BundleID . ":" . $shadowProductID;
-            $para["value"] = $shadowString;
-            $para["value_type"] = "string";
-            $thisField = $shopify->Metafield()->post($para);
-                                                        echo "<h1> origin to shadow  </h1>"."\n";
-                                                        echo "<pre>"."\n";
-                                                          print_r($thisField);
-                                                        echo "</pre>"."\n";
-                                                        echo "<h1> ---------------------------- </h1>"."\n";
-          }else{
-            $shadowString = $BundleID . ":" . $shadowProductID;
-            $para["value"] = $shadowString;
-            $para["value_type"] = "string";
-            $thisField = $shopify->Metafield()->post($para);
-                                                        echo "<h1> origin to shadow  </h1>"."\n";
-                                                        echo "<pre>"."\n";
-                                                          print_r($thisField);
-                                                        echo "</pre>"."\n";
-                                                        echo "<h1> ---------------------------- </h1>"."\n";
-          }
-          */
-//------------------------------------------------------------------------------
-          // $originToShadowInfo .=
-
           $bundleToShadowInfo .=  ","  . $shadowProductID ;
+          $originPtoOriginVInfo  .=  "\n";
                                                         echo "<h1> 5 --- Shadow Product </h1>"."\n";
                                                         echo "<pre>"."\n";
                                                           print_r($shadowProduct);
@@ -212,27 +181,45 @@
         } // end 'for'
 
 //--------## 6 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
+        // append with necessary "\n"
 
+        $bundleToShadowInfo   .=  "\n";
         $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "shadowVToOriginV.txt";
         $fileNameBundleToShadow = $_SESSION["shopUrl"] . "BundleToShadowP.txt";
-        $fileNameMetafieldID = $_SESSION["shopUrl"] . "MetafieldID.txt";
+        $fileNameOriginPtoOriginV = $_SESSION["shopUrl"] . "OriginPtoOriginV.txt";
+        $fileNameOriginVtoShadowV = $_SESSION["shopUrl"] . "OriginVtoShadowV.txt";
 
-        if( !file_exists( $fileNameMetafieldID ) ){ // create new file for the THREE
-          file_put_contents($fileNameMetafieldID, $metafieldID , LOCK_EX);
+        if( !file_exists( $fileNameOriginVtoShadowV ) ){   // create new file for the THREE
           file_put_contents($fileNameShadowToOrigin, $shadowToOriginInfo , LOCK_EX);
-          file_put_contents($fileNameBundleToShadow, $bundleToShadowInfo . "\n", LOCK_EX);
+          file_put_contents($fileNameOriginPtoOriginV, $originPtoOriginVInfo , LOCK_EX);
+          file_put_contents($fileNameOriginVtoShadowV, $originVtoShadowVInfo , LOCK_EX);//-------
+          file_put_contents($fileNameBundleToShadow, $bundleToShadowInfo, LOCK_EX);
         }else{                                         // read from existing file
-          $metafieldIDExist = file_get_contents($fileNameMetafieldID);
-          $metafieldIDExist .= $metafieldID ;
-          file_put_contents($fileNameMetafieldID, $metafieldIDExist, LOCK_EX);
-
           $shadowToOriginExist = file_get_contents($fileNameShadowToOrigin);
           $shadowToOriginExist .= $shadowToOriginInfo ;
           file_put_contents($fileNameShadowToOrigin, $shadowToOriginExist, LOCK_EX);
 
+          $originPtoOriginVExist = file_get_contents($fileNameOriginPtoOriginV);
+          $originPtoOriginVExist .= $originPtoOriginVInfo ;
+          file_put_contents($fileNameOriginPtoOriginV, $originPtoOriginVExist, LOCK_EX);
+
           $bundleToShadowExist = file_get_contents($fileNameBundleToShadow);
           $bundleToShadowExist .= $bundleToShadowInfo . "\n";
           file_put_contents($fileNameBundleToShadow, $bundleToShadowExist, LOCK_EX);
+
+          // specially handle with $originVtoShadowVInfo, since we need to modify content, not just append
+          $keyPairNew =explode( "#" , $originVtoShadowVInfo );
+          $originVNew = $keyPairNew[0];
+          $shadowVStringNew =  $keyPairNew[1];
+          $originVtoShadowVExist = file_get_contents($fileNameOriginVtoShadowV);
+
+          $keyPos = strpos($originVtoShadowVExist, $originVNew);
+          if( $keyPos != false ){
+            $posInsert = $keyPos + strlen($originVNew) + 1;// 1->'#'
+            $originVtoShadowVNew = substr_replace($originVtoShadowVExist, $shadowVStringNew . ",", $pos, 0);
+          }else{
+            $originVtoShadowVNew .= $originVtoShadowVInfo . "\n";
+          }
         }
 
 
