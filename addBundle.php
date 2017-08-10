@@ -211,18 +211,22 @@
           file_put_contents($fileNameBundleToShadow, $bundleToShadowExist, LOCK_EX);
 
           // specially handle with $originVtoShadowVInfo, since we need to modify content, not just append
-          $triPairNew =explode( "#" , $originVtoShadowVInfo );
-          $metaNew = $triPairNew[1];
-          $shadowVStringNew =  $triPairNew[2];
           $originVtoShadowVExist = file_get_contents($fileNameOriginVtoShadowV);
-
-          $metaPos = strpos($originVtoShadowVExist, $metaNew);
-          if( $metaPos != false ){
-            $posInsert = $metaPos + strlen($metaNew) + 1;// 1->'#'
-            $originVtoShadowVNew = substr_replace($originVtoShadowVExist, $shadowVStringNew . ",", $pos, 0);
-          }else{
-            $originVtoShadowVNew .= $originVtoShadowVInfo . "\n";
+          $originVtoShadowVLinesRaw =explode( "\n" , $originVtoShadowVInfo );
+          $originVtoShadowVLines = array_slice($originVtoShadowVLinesRaw, 0, count($originVtoShadowVLinesRaw)-1 ); // remove last empty item
+          foreach( $originVtoShadowVLines as $originVtoShadowVOneLine ){
+              $triPairNew =explode( "#" , $originVtoShadowVOneLine );
+              $metaNew = $triPairNew[1];
+              $shadowVStringNew =  $triPairNew[2];
+              $metaPos = strpos($originVtoShadowVExist, $metaNew);
+              if( $metaPos != false ){
+                $posInsert = $metaPos + strlen($metaNew) + 1;// 1->'#'
+                $originVtoShadowVExist = substr_replace($originVtoShadowVExist, $shadowVStringNew . ",", $posInsert, 0);
+              }else{
+                $originVtoShadowVExist .= $originVtoShadowVOneLine . "\n";
+              }
           }
+          file_put_contents($fileNameOriginVtoShadowV, $originVtoShadowVExist , LOCK_EX);
         }
 
 
