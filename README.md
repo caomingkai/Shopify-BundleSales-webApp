@@ -71,18 +71,18 @@
       + (_Pending_) update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
    1. deleteBundle.php --- delete specific bundle
       + 3 things need to delete
-         + 1. [visible]  shadow variants
-         + 2. [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
-         + 3. [invisible] metafiled.originToShadow
+         +  [visible]  shadow variants
+         +  [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
+         +  [invisible] metafiled.originToShadow
       + files related to "1-shadow variant"
          + bundleToShadowP.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
       + files related to "2-metafield.bundleInfo.bundleNum   |   ~.bundleDetail "
          + shopBundle.txt: this file contains bundleInfo content
       + files related to "3-metafiled.originToShadow"
-         + 1. shopBundle.txt
-         + 2. originPToOriginV.txt
-         + 3. originVtoShadowV.txt
-         + 4. general idea: when delete a bundle, First check 'shopBundle.txt', to find out what product are involved; Second based on 'originPToOriginV.txt', to find out what meta key 'originVariantID'; Third, based on 'originVtoShadowV.txt', find out what shadow variant need to be deleted.
+         +  shopBundle.txt
+         +  originPToOriginV.txt
+         +  originVtoShadowV.txt
+         +  general idea: when delete a bundle, First check 'shopBundle.txt', to find out what product are involved; Second based on 'originPToOriginV.txt', to find out what meta key 'originVariantID'; Third, based on 'originVtoShadowV.txt', find out what shadow variant need to be deleted.
    1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
    1. productInfo.txt  --- **write based on webhook**  --- could be updated due to webhook events
