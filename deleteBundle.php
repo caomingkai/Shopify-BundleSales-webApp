@@ -53,6 +53,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
 
 //====================== Delete things Based on user input ====================
 }else{
+      
       foreach( $originVtoShadowVArr as $oneLine ){
           $lineItemArr = explode("#",$oneLine);
           echo $lineItemArr[1]."\n";

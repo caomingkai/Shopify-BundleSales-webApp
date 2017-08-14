@@ -48,58 +48,53 @@
                   </script>';
 
 //-----## 1.1 ## updated code snippet to be inserted
-// 1. loop through cart items, to create product hashmap, store info in shop.metafield.cartHashmap, with key(variantID) / quantity pairs
+// 1. loop through cart items, to create product hashmap, store info in shop.metafields.cartHashmap, with key(variantID) / quantity pairs
 //    when we access it, we could use a loop
-// 2. read shop.metafield.bundleInfo.bundleNum / shop.metafield.bundleInfo.bundleDetail
+// 2. read shop.metafields.bundleInfo.bundleNum / shop.metafields.bundleInfo.bundleDetail
 // 3. bundleDetail: 46#4212:0.4,3438:0.8,9842:0.2
 //                  47#1232:0.3,3294:0.5,3843,0.8
 //
 $codeInject = '<script>
-                    {% assign BDItems = shop.metafield.bundleInfo.bundleDetail | split:"\n"  %}
+//--  ## 0 ## when this liquid file requested again by "location.reload()", we will check cart.item to check if there exist shadow product -->
+//--   if there exists, copy cart.item, change shadow variants to origin variants, and create my own data structure for next steps -->
+//--   Also, record beginning cart data cartBeginData. After get the cartFinalData from cartOriginData, compare cartFinalData with cartBeginData to see   -->
+//--   if the cartFinalData are the same with cartBeginData. If YES, no AJAX call; if NO,  call AJAX   -->
 
-<!-- ## 1 ## BDItem is one bundle item containing info -->
-                    {% for BDItem in BDItems %}
-                        {% assign BDID = BDItem | first %}
-                        {% assign BD = BDItem | last %}
+                    {% assign cartBeginData  = "" %}
+                    {% assign cartFinalData  = "" %}
+                    {% assign cartOriginData = "" %}
+                    {% for item in cart.items %}
+                        {% assign itemOriginV = item.variant.metafields[0].shadowToOrigin[item.variant_id]  %}
+                        {% if itemOriginV != 0  %}
+                            {% assign cartOriginData = itemOriginV      %}
+                        {% else %}
+                            {% assign cartOriginData = item.variant_id  %}
+                        {% endif %}
+                        {% assign cartOriginData = cartOriginData | append: item.product_id | append: item.quantity | append: "\n" %}
+                        {% assign cartBeginData = item.variant_id | append: item.quantity | append: "\n" %}
+                    {%endfor%}
+
+//--  ## 1 ## split cartOriginData into array -->
+                    {% assign cartOriginArr = cartOriginData | strip | split: "\n"  %}
+
+//--  ## 2 ## bundle is one bundle_item containing info -->
+                    {% for bundle in Bundles %}
+                        {% assign BDID = bundle | first %}
+                        {% assign BD = bundle | last %}
                         {% assign BDArray = BD | split:","  %}
                         {% assign min = 1000000 %}
 
-<!-- ## 1.1 ## itemVariantID: find out which variant need to be exchanged for shadow product for this bundle -->
-                        {% assign itemVariantID = ""  %}
-                        {% assign itemShadowVariantID = ""  %}
-
-<!-- ## 2 ## BDOne is one pair of originProductID:discount  -->
+//--  ## 3 ## BDOne is one pair of originProductID:discount  -->
                         {% for BDOne in BDArray %}
-                            {% assign BDOneArray = BDOne | split:":"   %}
-                            {% assign BDOneProductId = BDOneArray | first  %}
+                            {% assign BDOnePair = BDOne | split:":"   %}
+                            {% assign BDOneProductId = BDOnePair | first  %}
                             {% assign cnt = 0 %}
 
-<!-- ## 3 ## find out if there exists such bundle pattern in cart depending on cnt?=0 , meanwhile, record quantity of this combo -->
-                            {% for item in cart.items  %}
-                                {% if item.product_id ==  BDOneProductId  %}
-                                    {% assign cnt = cnt | plus: 1  %}
-<!-- ## 4 ## find out the postion of the variant located in product  -->
-                                    {% assign pos = 0 %}
-                                    {% for var in item.product.variants %}
-                                         {% assign pos = forloop.index0 %}
-                                         {% if var.id == item.variant.id  %}
-                                              {% break %}
-                                         {% endif %}
-                                    {%endfor%}
-<!-- ## 5 ## find out its corresponding shadow productID for this line_item  -->
-                                    {% assign itemShadowID = "" %}
-                                    {% assign shadowProductArray = shop.metafield.originToShadow[item.product_id] | split: ","  %}
-                                    {% for bundleProductPair in shadowProductArray %}
-                                        {% assign bundleProductArray = bundleProductPair | split: ":"  %}
-                                        {% assign bundleID = bundleProductArray | first  %}
-                                        {% assign shadowID = bundleProductArray | last   %}
-                                        {% if  bundleID == BDID %}
-                                            {% assign itemShadowID = shadowID %}
-                                            {% break %}
-                                        {% endif %}
-                                    {%endfor%}
-                                    {% assign itemShadowVariantID = product.variants[pos]
-                                    {% assign itemVariantID = itemVariantID | append: item.variant.id | append: "," %}
+//--  ## 4 ## find out if there exists such bundle pattern in cart depending on cnt?=0 , meanwhile, record quantity of this combo -->
+                            {% for itemStr in cartOriginArr  %}
+                                {% assign itemArr = itemStr | split: ":"  %}
+                                {% if itemArr[1] ==  BDOneProductId  %}
+                                    {% assign cnt = cnt | plus: itemArr[2]  %}
                                 {% endif %}
                             {%endfor%}
                             {% if cnt == 0  %}
@@ -111,15 +106,135 @@ $codeInject = '<script>
                             {% endif %}
                         {%endfor%}
 
-                        {% if min != 0 and min != 1000000 %}
-                            // 0. indicate this bundle has corresponding products in cart
-                            // 1. make REST call to delete orignial product variant based on itemVariantID
-                            // 2. make REST call to add corresponding shadow variant based on itemVariantID
-                            //    2.1 loop through itemVariantID to delete current variant item
-                            //    2.2 loop through itemProductID, to find its shadow productID, ->  .variants[]
-                            for
+//--  ## 5 ## if there exist such bundle, delete origin variant in cartOriginArr, record added shadow variant in shadowFinalData  -->
+//--  Meanwhile, record origin variant after deletion in originFinalData. Then combine shadowFinalData and originFinalData into cartFinalData  -->
+                        {% if min != 1000000 %}
+                            {% assign shadowFinalData = ""  %}
+                            {% assign originFinalData = ""  %}
+                            {% for BDOne in BDArray %}
+                                {% assign minTemp = min %}
+                                {% assign BDOnePair = BDOne | split:":"   %}
+                                {% assign BDOneProductId = BDOnePair | first  %}
+                                {% for itemStr in cartOriginArr  %}
+                                    {% assign itemArr = itemStr | split: ":"  %}
+                                    {% if itemArr[1] ==  BDOneProductId  %}
+
+//--  ## 6 ##  find corresponding shadow variant for origin variant, based on bundleID  -->
+                                        {% assign originToShadowArr = shop.metafields.originToShadow[itemArr[0]] | split: ","  %}
+                                        {% for OTSStr in originToShadowArr  %}
+                                              {% assign OTSPair = OTSStr | split: ":"  %}
+                                              {% if BDID == OTSPair[0]  %}
+                                                  {% assign shadowVarID = OTSPair[1]  %}
+                                              {% endif %}
+                                        {%endfor%}
+
+//--  ## 7 ##  delete  origin variant in cartOriginArr, based on the found shadowID, record updated variant in originFinalData and added shadow variant in shadowFinalData  -->
+                                        {% assign cartItemIndex = forloop.index0  %}
+                                        {% assign cartOriginDataTemp = ""  %}
+                                        {% if itemArr[2] < minTemp  %}
+
+//--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
+                                            {% for itemStr in cartOriginArr  %}
+                                                {% if forloop.index0 != cartItemIndex  %}
+                                                    {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
+                                                {% endif %}
+                                            {%endfor%}
+                                            {% assign cartOriginArr = cartOriginDataTemp | strip | split:"\n" %}
+
+                                            {% assign originFinalData = originFinalData | append: itemArr[0]  | append: 0          | append: "\n" %}
+                                            {% assign shadowFinalData = shadowFinalData | append: shadowVarID | append: itemArr[2] | append: "\n" %}
+                                            {% assign minTemp = minTemp | minus: itemArr[2] %}
+                                        {% else %}
+                                            {% assign quantityNew = itemArr[2] | minus: minTemp  %}
+//--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
+                                            {% for itemStr in cartOriginArr  %}
+                                                {% if forloop.index0 != cartItemIndex  %}
+                                                    {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
+                                                {% else %}
+                                                    {% assign itemStrChanged = itemArr[0] | append : itemArr[1] | append: quantityNew %}
+                                                    {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStrChanged | append:"\n" %}
+                                                {% endif %}
+                                            {%endfor%}
+                                            {% assign cartOriginArr = cartOriginDataTemp | strip | split:"\n" %}
+
+                                            {% assign originFinalData = originFinalData | append: itemArr[0]  | append: quantityNew | append: "\n" %}
+                                            {% assign shadowFinalData = shadowFinalData | append: shadowVarID | append: minTemp     | append: "\n" %}
+                                        {% endif %}
+                                    {% endif %}
+                                {%endfor%}
+                            {%endfor%}
+//--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
+                            {% assign cartFinalData = cartFinalData | append: originFinalData | append: shadowFinalData %}
                         {% endif %}
+
                     {%endfor%}
+//--  ## 10 ##  compare "cartBeginData" and "cartFinalData", make delete/add AJAX call based on comparason result -->
+                    {% if cartBeginData != cartFinalData %}
+                        {% assign cartBeginArr = cartBeginData | strip | split:"\n" %}
+                        {% assign cartFinalArr = cartFinalData | strip | split:"\n" %}
+
+//--  ## 11 ##  find element in cartBeginArr but not in cartFinalArr : these are origin variants to be deleted -->
+                        {% assign toBeDeleted = "" %}
+                        {% for cartBeginItem in cartBeginArr %}
+                            {% assign flag = false %}
+                            {% for cartFinalItem in cartFinalArr %}
+                                {% if cartFinalItem == cartBeginItem %}
+                                    {% assign flag = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if flag == false %}
+                                {% assign toBeDeleted = toBeDeleted | append: cartBeginItem | append:"\n" %}
+                            {% endif %}
+                        {% endfor %}
+
+//--  ## 12 ##  find element in cartFinalArr but not in cartBeginArr : these are shadow variants to be added -->
+                        {% assign toBeAdded = "" %}
+                        {% for cartFinalItem in cartFinalArr %}
+                            {% assign flag = false %}
+                            {% for cartBeginItem in cartBeginArr %}
+                                {% if cartBeginItem == cartFinalItem %}
+                                    {% assign flag = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if flag == false %}
+                                {% assign toBeAdded = toBeAdded | append: cartFinalItem | append:"\n" %}
+                            {% endif %}
+                        {% endfor %}
+                        {% assign toBeDeletedArr = toBeDeleted | strip | split:"\n" %}
+                        {% assign toBeAddedArr   = toBeAdded   | strip | split:"\n" %}
+
+//--  ## 13 ##  Make AJAX call to delete/add arr, based on toBeDeletedArr/toBeAddedArr -->
+                        {% for toBeDeleteItem in toBeDeletedArr %}
+                            var xhttp = new XMLHttpRequest();
+                            xhttp.onreadystatechange = function() {
+                                if (this.readyState == 4 && this.status == 200) {
+                                    document.getElementById("test").innerHTML =
+                                      "Delete SUCCEED!";
+                                }
+                            };
+                            xhttp.open("POST", "/cart/update.js", false);
+                            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                            xhttp.send("id={{toBeDeleteItem[0]}}&quantity=0");
+                        {% endfor %}
+
+                        {% for toBeAddedItem in toBeAddedArr %}
+                            var xhttp = new XMLHttpRequest();
+                            xhttp.onreadystatechange = function() {
+                                if (this.readyState == 4 && this.status == 200) {
+                                    document.getElementById("test").innerHTML =
+                                      "ADD SUCCEED!";
+                                }
+                            };
+                            xhttp.open("POST", "/cart/add.js", false);
+                            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                            xhttp.send("id={{toBeAddedItem[0]}}&quantity={{toBeAddedItem[1]}}");
+                        {% endfor %}
+
+                    {% else %}
+                        alert("No change, So no need to call AJAX!");
+                    {% endif %}
 
               </script>';
 

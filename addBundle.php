@@ -87,9 +87,7 @@
 
 //--------## 3 ##  make REST call to add shadow product based on submitted bundle------------------------
 //--------## 4 ##  make REST call to add shop.metafield.originToShadow based on new added shadow---------
-//--------## 5 ##  update OriginPtoOriginV.txt based on response of GET(originPId) ---------
-//--------## 6 ##  update OriginVtoShadowV.txt based on response of POST for the added new shadow variants ---------
-
+//--------## 4 ##  make REST call to add shadowVariant.metafield.shadowToOrigin ---------
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
         $bundleToShadowInfo = $BundleID;          // for 'bundleToShadowP.txt'
@@ -140,10 +138,25 @@
           $shadowProduct = $shopify->Product()->post($originProduct);
           $shadowProductID = $shadowProduct['id'];
 
-          // add Metafield: shop.metafield.originToShadow.originVariantID
+          // add Metafield: originVariant.metafield.originToShadow.originVariantID
+          // add Metafield: shadowVariant.metafield.shadowToOrigin.shadowVariantID
           for( $j = 0; $j < $numOfVar; $j++ ){
             $originVariantID = $originVariantIDArray[$j];
             $shadowVariantID = $shadowProduct['variants'][$j]['id'];
+            // add Metafield: shadowVariant.metafield.shadowToOrigin
+            $variantPara = array(
+                  "namespace" => "shadowToOrigin",
+                  "key" => $shadowVariantID,
+                  "value" => $originVariantID . ":" . $originProductID,
+                  "value_type" => "string"
+            );
+            $variantMetafield = $shopify->Product($shadowProductID)->Variant($shadowVariantID)->Metafield->post($variantPara);
+                                                        echo "<h1> 4.0 -- [Variant metafield] --  </h1>"."\n";
+                                                        echo "<pre>"."\n";
+                                                          print_r($variantMetafield);
+                                                        echo "</pre>"."\n";
+                                                        echo "---------------------------- "."\n";
+
             $para = array(
               "namespace" => "originToShadow",
               "key" => $originVariantID
@@ -183,7 +196,9 @@
                                                         echo "---------------------------- "."\n";
         } // end 'for'
 
-//--------## 6 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
+//--------## 6 ##  update OriginPtoOriginV.txt based on response of GET(originPId) ---------
+//--------## 7 ##  update OriginVtoShadowV.txt based on response of POST for the added new shadow variants ---------
+//--------## 8 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
         // append with necessary "\n"
 
         $bundleToShadowInfo   .=  "\n";
