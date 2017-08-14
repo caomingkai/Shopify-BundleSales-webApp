@@ -169,8 +169,9 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 
         {%endfor%}
 
-
+//=================================================================================================
 //--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
+//=================================================================================================
 document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
             {% for originItemStr in cartOriginArr  %}
                 {% assign originItemTriple = originItemStr | split: ":" %}
@@ -181,8 +182,9 @@ document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData
 
             {% assign cartFinalData = cartFinalData | append: cartAddedData %}
 
-//===============================================================================================
+//=================================================================================================
 //--  ## 10 ##  compare "cartBeginData" and "cartFinalData", make delete/add AJAX call based on comparason result -->
+//=================================================================================================
         {% assign cartBeginData = cartBeginData |strip | split:"\n" | sort | join: "\n" %}
         {% assign cartFinalData = cartFinalData |strip | split:"\n" | sort | join: "\n" %}
 document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+"{{cartBeginData}}" + "<br>" +"{{cartFinalData}}";
