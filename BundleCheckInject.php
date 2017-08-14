@@ -282,8 +282,6 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"
 window.onload = load;
 
 </script>';
-
-
 //-------------------------------------------------------------------------------
     $para = array(
       "key" => "snippets/bundleCheck.liquid",
@@ -293,16 +291,26 @@ window.onload = load;
 
 
 
+
+
 //-----## 2  ## insert the statement: {% include "bundleCheck" %} to "theme.liquid" file  -->
+
+
     // find out theme.liquid, based on themeID already got
     $para = array(
       "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
     );
     $themeContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
-    // find out <head> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
-    $posOfHead = strpos( $themeContent, '<head>');
-    $statementInject = "\n" . "  {% include 'bundleCheck' %}";
-    $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfHead+6, 0 );
+
+
+    // find out </body> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
+    $posOfBodyEnd = strpos( $themeContent, '</body>');
+    $statementInject = "\n" . "  {% if template == 'cart' %} " . "\n"
+                            . "    {% include 'bundleCheck' %}". "\n"
+                            . "  {% endif %}"                  . "\n";
+    $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfBodyEnd, 0 );
+
+
     // insert statement  "{% include 'bundleCheck' %}", right after <head> tag
     $para = array(
       "key" => "layout/theme.liquid",
