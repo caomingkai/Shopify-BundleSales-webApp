@@ -4,12 +4,12 @@ function load(){
 //=================================================================================================
 //--  ## 0 ## convert all products including shadow product into cartOriginData -->
 //=================================================================================================
-
-  			{% assign cartBeginData  = "" %}
+		{% assign cartAddedData  = "" %}
+  		{% assign cartBeginData  = "" %}
         {% assign cartFinalData  = "" %}
         {% assign cartOriginData = "" %}
     //-------------------------------------------------------------------------------------------------------
-    // cartOriginData : First, it's origin variants corresponding to variants( origin or shadow ) in cart.
+    // cartOriginData : First, it is origin variants corresponding to variants( origin or shadow ) in cart.
     //                  Later, as shadow variants added to the cartAddedData, will delete variants from it.
     // cartAddedData:   Based on bundle info, add shadow variants into this cartAddedData
     // cartFinalData:   In the last, combine cartOriginData and cartAddedData; compare with cartBeginData to render what to delete/add
@@ -24,14 +24,14 @@ function load(){
           	    {% assign cartOriginVPStr = item.variant_id |append: ":" |append: item.product_id  %}
             {% endif %}
   					{% assign cartOriginData = cartOriginData | append:cartOriginVPStr  | append: ":"| append: item.quantity | append: "\n"  %}
-            {% assign cartBeginData  = cartBeginData  | append: item.variant_id | append: ":"| append: item.product_id | append: ":"| append: item.quantity | append: "\n" %}
+            {% assign cartBeginData  = cartBeginData  | append: item.variant_id | append: ":"| append: item.quantity | append: "\n" %}
         {%endfor%}
 
 //=================================================================================================
 //--  ## 1 ## merge common items in cartOriginData, update into new cartOriginData -->
 //=================================================================================================
       	{% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
-document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+'{{cartOriginArr[0]}}' + "<br>" +'{{cartOriginArr[1]}}'+"<br>" +'{{cartOriginArr[2]}}';
+document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{cartOriginArr[0]}}" + "<br>" +"{{cartOriginArr[1]}}"+"<br>" +"{{cartOriginArr[2]}}";
 				{% assign cartOriginDataTemp = "" %}
 				{% for itemStr in cartOriginArr %}
   					{% assign itemArr = itemStr | split: ":" %}
@@ -39,8 +39,8 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+'{{
   					{% assign cartOriginArrLastTemp = cartOriginArrTemp|last %}
     			  {% assign cartOriginArrLastTempArr = cartOriginArrLastTemp| split: ":" %}
 				    {% assign cartOriginDataTemp_1 = "" %}
-// alert('cartOriginDataTemp:'+'{{cartOriginDataTemp}}'+"---"+'cartOriginArrLastTemp:'+'{{cartOriginArrLastTemp}}');
-// alert('{{itemArr[0]}}'+"---"+'{{cartOriginArrLastTempArr[0] }}');
+// alert("cartOriginDataTemp:"+"{{cartOriginDataTemp}}"+"---"+"cartOriginArrLastTemp:"+"{{cartOriginArrLastTemp}}");
+// alert("{{itemArr[0]}}"+"---"+"{{cartOriginArrLastTempArr[0] }}");
   					{% if itemArr[0] == cartOriginArrLastTempArr[0] %}
   						  {% assign loopLimit = cartOriginArrTemp | size | minus: 1 %}
   						  {% for cartOriginItemTemp  in cartOriginArrTemp limit:loopLimit %}
@@ -52,18 +52,19 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+'{{
             {% else %}
         				{% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 |append: cartOriginDataTemp | append: itemStr |append:"\n" %}
             {% endif %}
-// alert('{{cartOriginDataTemp_1}}');
+// alert("{{cartOriginDataTemp_1}}");
             {% assign cartOriginDataTemp = cartOriginDataTemp_1 %}
   			{% endfor %}
   			{% assign cartOriginData = cartOriginDataTemp  %}
-document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+'{{cartOriginData}}' + "<br>" +'{{cartBeginData}}';
+document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartBeginData}}";
 
 //=================================================================================================
 //--  ## 2 ## check each bundle to see if there exist matches in cart. bundle is one bundle_item containing info -->
 //=================================================================================================
-        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail | strip | split: "\n"  %}
-        {% for bundleStr in Bundles %}
-            {% assign cartAddedData  = "" %}
+        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail |  newline_to_br | strip_newlines | split: "<br />"  %}
+
+      	{% for bundleStr in Bundles %}
+// alert("{{bundleStr}}");
             {% assign cartOriginArr = cartOriginData | strip | split: "\n"  %}
       			{% assign bundle = bundleStr | strip | split:"#" %}
             {% assign BDID = bundle | first %}
@@ -84,6 +85,7 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                         {% assign cnt = cnt | plus: itemArr[2]  %}
                     {% endif %}
                 {%endfor%}
+// alert("cnt:"+"{{cnt}}");
                 {% if cnt == 0  %}
                     {% assign min = 1000000 %}
 			 	            {% break %}
@@ -100,13 +102,15 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 //--  Meanwhile, record origin variant after deletion in originFinalData. Then combine shadowFinalData and originFinalData into cartFinalData  -->
       			{% if min != 1000000 %}
                 {% for BDOne in BDArray %}
-alert('cartOriginData:{{cartOriginData}}');
-                    {% assign minTemp = min %}
                     {% assign BDOnePair = BDOne | split:":"   %}
                     {% assign BDOneProductId = BDOnePair | first  %}
+
+                    {% assign minTemp = min %}
+                    {% assign cartOriginDataTemp = cartOriginData %}
+
                     {% for itemStr in cartOriginArr  %}
-alert('cartItem:{{itemStr}}');
                         {% assign itemArr = itemStr | split: ":"  %}
+                        {% assign cartOriginArrTemp = cartOriginDataTemp | strip | split: "\n" | sort  %}
                         {% if itemArr[1] ==  BDOneProductId  %}
 //--  ## 6 ##  find corresponding shadow variant for origin variant, based on bundleID  -->
                             {% assign originToShadowArr = shop.metafields.originToShadow[itemArr[0]] | split: ","  %}
@@ -118,56 +122,70 @@ alert('cartItem:{{itemStr}}');
                             {%endfor%}
 
 //--  ## 7 ##  delete  origin variant in cartOriginArr, based on the found shadowID, record updated variant in originFinalData and added shadow variant in shadowFinalData  -->
-                            {% assign cartItemIndex = forloop.index0  %}
-                            {% assign cartOriginDataTemp = ""  %}
-		                        {% assign itemQuantity =  itemArr[2]|plus:0 %}
-                            {% if itemQuantity <= minTemp  %}
-
+                            {% assign itemNeedChange = itemArr[0]  %}
+		                        {% assign itemQuantity =   itemArr[2] | plus:0 %}
+                            	{% if itemQuantity <= minTemp  %}
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
-                                {% for itemStr in cartOriginArr  %}
-                                    {% if forloop.index0 != cartItemIndex  %}
-                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
+                                {% assign temp = "" %}
+                                {% for itemStrTemp in cartOriginArrTemp  %}
+      							{% assign itemArrTemp = itemStrTemp | split:":" %}
+// alert("{{itemArrTemp[0]}}"+":"+"{{itemNeedChange}}");
+                                    {% if itemArrTemp[0] != itemNeedChange  %}
+                                        {% assign temp = temp | append: itemStrTemp | append:"\n" %}
                                     {% endif %}
                                 {%endfor%}
-                                {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[1] | append:":"| append: itemArr[2] | append: "\n" %}
+                                {% assign cartOriginDataTemp = temp %}
+                                {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[2] | append: "\n" %}
                                 {% assign minTemp = minTemp | minus: itemArr[2] %}
                             {% else %}
                                 {% assign quantityNew = itemArr[2] | minus: minTemp  %}
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
-                                {% for itemStr in cartOriginArr  %}
-                                    {% if forloop.index0 != cartItemIndex  %}
-                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
+                                {% assign temp = "" %}
+                                {% for itemStrTemp in cartOriginArrTemp  %}
+                                {% assign itemArrTemp = itemStrTemp | split:":" %}
+                                    {% if itemArrTemp[0] != itemNeedChange  %}
+                                        {% assign temp = temp | append: itemStrTemp | append:"\n" %}
                                     {% else %}
                                         {% assign itemStrChanged = itemArr[0] | append :":"| append : itemArr[1] | append :":"| append: quantityNew %}
-                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStrChanged | append:"\n" %}
+                                        {% assign temp = temp | append: itemStrChanged | append:"\n" %}
                                     {% endif %}
                                 {%endfor%}
-                                alert("{{cartOriginDataTemp}}");
+                                {% assign cartOriginDataTemp = temp %}
                                 {% if minTemp > 0  %}
-								                    {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[1] | append:":"| append: minTemp | append: "\n" %}
+								                    {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: minTemp | append: "\n" %}
                                 {% endif %}
-alert('shadowFinalData:' +'{{shadowFinalData}}');
 						                {% endif %}
-                            {% assign cartOriginData = cartOriginDataTemp  %}
                         {% endif %}
                     {%endfor%}
+                    {% assign cartOriginData = cartOriginDataTemp  %}
+                    {% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
                 {%endfor%}
             {% else %}
                 // --- indicate the for current bundle, no matching variants in cart
+                // --- 1. leave cartOriginArr not changed
+                // --- 2. reset cartAddedData to "", in case last cartAddedData would be append again, even though current bundle has no match
+
             {% endif %}
 
-//--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
-document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+'{{cartOriginData}}' + "<br>" +'{{cartAddedData}}';
-            {% assign cartFinalData = cartFinalData | append: cartOriginData | append: cartAddedData %}
         {%endfor%}
 
 
+//--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
+document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
+            {% for originItemStr in cartOriginArr  %}
+                {% assign originItemTriple = originItemStr | split: ":" %}
+                {% assign originItemPair = originItemTriple[0] | append: ":" | append: originItemTriple[2] | append:"\n"  %}
+                {% assign cartFinalData = cartFinalData | append: originItemPair  %}
+            {%endfor%}
+// document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+"{{cartFinalData}}";
+
+            {% assign cartFinalData = cartFinalData | append: cartAddedData %}
 
 //===============================================================================================
 //--  ## 10 ##  compare "cartBeginData" and "cartFinalData", make delete/add AJAX call based on comparason result -->
         {% assign cartBeginData = cartBeginData |strip | split:"\n" | sort | join: "\n" %}
         {% assign cartFinalData = cartFinalData |strip | split:"\n" | sort | join: "\n" %}
-document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+'{{cartBeginData}}' + "<br>" +'{{cartFinalData}}';
+document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+"{{cartBeginData}}" + "<br>" +"{{cartFinalData}}";
         {% if cartBeginData != cartFinalData %}
             {% assign cartBeginArr = cartBeginData | strip | split:"\n" %}
             {% assign cartFinalArr = cartFinalData | strip | split:"\n" %}
@@ -203,7 +221,7 @@ document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"
             {% assign toBeAddedArr   = toBeAdded   | strip | split:"\n" %}
 
 //--  ## 13 ##  Make AJAX call to delete/add arr, based on toBeDeletedArr/toBeAddedArr -->
-document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+'{{toBeAdded}}' + "<br>" +'{{toBeDeleted}}';
+document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"{{toBeAdded}}" + "<br>" +"{{toBeDeleted}}";
 
             {% for toBeDeleteItemStr in toBeDeletedArr %}
             		{% assign toBeDeleteItem = toBeDeleteItemStr | split:":" %}
@@ -230,9 +248,9 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+'
                 };
                 xhttp.open("POST", "/cart/add.js", false);
                 xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.send("id={{toBeAddedItem[0]}}&quantity={{toBeAddedItem[2]}}");
+                xhttp.send("id={{toBeAddedItem[0]}}&quantity={{toBeAddedItem[1]}}");
             {% endfor %}
-//                      	location.reload();
+                     	location.reload();
         {% else %}
 //                         alert("No change, So no need to call AJAX!");
         {% endif %}

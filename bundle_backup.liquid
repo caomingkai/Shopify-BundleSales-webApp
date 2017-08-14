@@ -1,36 +1,15 @@
-<?php
-    session_start();
-    require_once __DIR__ . '/vendor/autoload.php';
 
-    $config = $_SESSION["config"];
-    PHPShopify\ShopifySDK::config($config);
-    $shopify = new PHPShopify\ShopifySDK;
-
-//-----## 0 ## find out the main Theme.liquid, and its ID
-    $themes = $shopify->Theme->get();
-    $numsOfThemes = count($theme);
-    $themeID = 0;
-    foreach( $themes as $oneTheme ){
-      if($oneTheme['role'] === 'main'){
-        $themeID = $oneTheme['id'];
-        break;
-      }
-    }
-
-//-----## 1 ## insert bundleCheck.liquid to shopify admin Snippet
-// the code snippet to be inserted
-$codeInject = '
 <script type="text/javascript">
 function load(){
 //=================================================================================================
 //--  ## 0 ## convert all products including shadow product into cartOriginData -->
 //=================================================================================================
-		{% assign cartAddedData  = "" %}
-  		{% assign cartBeginData  = "" %}
+
+  			{% assign cartBeginData  = "" %}
         {% assign cartFinalData  = "" %}
         {% assign cartOriginData = "" %}
     //-------------------------------------------------------------------------------------------------------
-    // cartOriginData : First, it is origin variants corresponding to variants( origin or shadow ) in cart.
+    // cartOriginData : First, it's origin variants corresponding to variants( origin or shadow ) in cart.
     //                  Later, as shadow variants added to the cartAddedData, will delete variants from it.
     // cartAddedData:   Based on bundle info, add shadow variants into this cartAddedData
     // cartFinalData:   In the last, combine cartOriginData and cartAddedData; compare with cartBeginData to render what to delete/add
@@ -52,7 +31,7 @@ function load(){
 //--  ## 1 ## merge common items in cartOriginData, update into new cartOriginData -->
 //=================================================================================================
       	{% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
-document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{cartOriginArr[0]}}" + "<br>" +"{{cartOriginArr[1]}}"+"<br>" +"{{cartOriginArr[2]}}";
+document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+'{{cartOriginArr[0]}}' + "<br>" +'{{cartOriginArr[1]}}'+"<br>" +'{{cartOriginArr[2]}}';
 				{% assign cartOriginDataTemp = "" %}
 				{% for itemStr in cartOriginArr %}
   					{% assign itemArr = itemStr | split: ":" %}
@@ -60,8 +39,8 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{
   					{% assign cartOriginArrLastTemp = cartOriginArrTemp|last %}
     			  {% assign cartOriginArrLastTempArr = cartOriginArrLastTemp| split: ":" %}
 				    {% assign cartOriginDataTemp_1 = "" %}
-// alert("cartOriginDataTemp:"+"{{cartOriginDataTemp}}"+"---"+"cartOriginArrLastTemp:"+"{{cartOriginArrLastTemp}}");
-// alert("{{itemArr[0]}}"+"---"+"{{cartOriginArrLastTempArr[0] }}");
+// alert('cartOriginDataTemp:'+'{{cartOriginDataTemp}}'+"---"+'cartOriginArrLastTemp:'+'{{cartOriginArrLastTemp}}');
+// alert('{{itemArr[0]}}'+"---"+'{{cartOriginArrLastTempArr[0] }}');
   					{% if itemArr[0] == cartOriginArrLastTempArr[0] %}
   						  {% assign loopLimit = cartOriginArrTemp | size | minus: 1 %}
   						  {% for cartOriginItemTemp  in cartOriginArrTemp limit:loopLimit %}
@@ -73,19 +52,18 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{
             {% else %}
         				{% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 |append: cartOriginDataTemp | append: itemStr |append:"\n" %}
             {% endif %}
-// alert("{{cartOriginDataTemp_1}}");
+// alert('{{cartOriginDataTemp_1}}');
             {% assign cartOriginDataTemp = cartOriginDataTemp_1 %}
   			{% endfor %}
   			{% assign cartOriginData = cartOriginDataTemp  %}
-document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartBeginData}}";
+document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+'{{cartOriginData}}' + "<br>" +'{{cartBeginData}}';
 
 //=================================================================================================
 //--  ## 2 ## check each bundle to see if there exist matches in cart. bundle is one bundle_item containing info -->
 //=================================================================================================
-        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail |  newline_to_br | strip_newlines | split: "<br />"  %}
-
-      	{% for bundleStr in Bundles %}
-// alert("{{bundleStr}}");
+        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail | strip | split: "\n"  %}
+        {% for bundleStr in Bundles %}
+            {% assign cartAddedData  = "" %}
             {% assign cartOriginArr = cartOriginData | strip | split: "\n"  %}
       			{% assign bundle = bundleStr | strip | split:"#" %}
             {% assign BDID = bundle | first %}
@@ -106,7 +84,7 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                         {% assign cnt = cnt | plus: itemArr[2]  %}
                     {% endif %}
                 {%endfor%}
-// alert("cnt:"+"{{cnt}}");
+alert("cnt:"+'{{cnt}}');
                 {% if cnt == 0  %}
                     {% assign min = 1000000 %}
 			 	            {% break %}
@@ -116,22 +94,21 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                     {% endif %}
                 {% endif %}
             {%endfor%}
-// alert("{{min}}");
+alert("{{min}}");
 
 
 //--  ## 5 ## if there exist such bundle, delete origin variant in cartOriginArr, record added shadow variant in shadowFinalData  -->
 //--  Meanwhile, record origin variant after deletion in originFinalData. Then combine shadowFinalData and originFinalData into cartFinalData  -->
       			{% if min != 1000000 %}
                 {% for BDOne in BDArray %}
+alert("loop:"+"{{forloop.index}}");
+alert('cartOriginData:{{cartOriginData}}');
+                    {% assign minTemp = min %}
                     {% assign BDOnePair = BDOne | split:":"   %}
                     {% assign BDOneProductId = BDOnePair | first  %}
-
-                    {% assign minTemp = min %}
-                    {% assign cartOriginDataTemp = cartOriginData %}
-
                     {% for itemStr in cartOriginArr  %}
+      alert('cartItem:{{itemStr}}'+"in "+"cartOriginArr:{{cartOriginArr}}");
                         {% assign itemArr = itemStr | split: ":"  %}
-                        {% assign cartOriginArrTemp = cartOriginDataTemp | strip | split: "\n" | sort  %}
                         {% if itemArr[1] ==  BDOneProductId  %}
 //--  ## 6 ##  find corresponding shadow variant for origin variant, based on bundleID  -->
                             {% assign originToShadowArr = shop.metafields.originToShadow[itemArr[0]] | split: ","  %}
@@ -143,70 +120,71 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                             {%endfor%}
 
 //--  ## 7 ##  delete  origin variant in cartOriginArr, based on the found shadowID, record updated variant in originFinalData and added shadow variant in shadowFinalData  -->
-                            {% assign itemNeedChange = itemArr[0]  %}
-		                        {% assign itemQuantity =   itemArr[2] | plus:0 %}
-                            	{% if itemQuantity <= minTemp  %}
+                            {% assign cartItemIndex = forloop.index0  %}
+alert("cartItemIndex:"+"{{cartItemIndex}}");
+                            {% assign cartOriginDataTemp = ""  %}
+		                        {% assign itemQuantity =  itemArr[2]|plus:0 %}
+                            {% if itemQuantity <= minTemp  %}
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
-                                {% assign temp = "" %}
-                                {% for itemStrTemp in cartOriginArrTemp  %}
-      							{% assign itemArrTemp = itemStrTemp | split:":" %}
-// alert("{{itemArrTemp[0]}}"+":"+"{{itemNeedChange}}");
-                                    {% if itemArrTemp[0] != itemNeedChange  %}
-                                        {% assign temp = temp | append: itemStrTemp | append:"\n" %}
+                                {% for itemStr in cartOriginArr  %}
+                                    {% if forloop.index0 != cartItemIndex  %}
+                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
                                     {% endif %}
                                 {%endfor%}
-                                {% assign cartOriginDataTemp = temp %}
                                 {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[2] | append: "\n" %}
                                 {% assign minTemp = minTemp | minus: itemArr[2] %}
                             {% else %}
                                 {% assign quantityNew = itemArr[2] | minus: minTemp  %}
+
+
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
-                                {% assign temp = "" %}
-                                {% for itemStrTemp in cartOriginArrTemp  %}
-                                {% assign itemArrTemp = itemStrTemp | split:":" %}
-                                    {% if itemArrTemp[0] != itemNeedChange  %}
-                                        {% assign temp = temp | append: itemStrTemp | append:"\n" %}
+                                {% for itemStr in cartOriginArr  %}
+alert("itemStr:"+"{{itemStr}}");
+alert("cartOriginDataTemp"+"{{cartOriginDataTemp}}");
+                                    {% if forloop.index0 != cartItemIndex  %}
+                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStr | append:"\n" %}
                                     {% else %}
                                         {% assign itemStrChanged = itemArr[0] | append :":"| append : itemArr[1] | append :":"| append: quantityNew %}
-                                        {% assign temp = temp | append: itemStrChanged | append:"\n" %}
+                                        {% assign cartOriginDataTemp = cartOriginDataTemp | append: itemStrChanged | append:"\n" %}
+alert("quantityNew"+"{{quantityNew}}");
+alert("itemStrChanged"+"{{itemStrChanged}}");
+
                                     {% endif %}
                                 {%endfor%}
-                                {% assign cartOriginDataTemp = temp %}
+alert("{{cartOriginDataTemp}}");
                                 {% if minTemp > 0  %}
 								                    {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: minTemp | append: "\n" %}
                                 {% endif %}
-						                {% endif %}
+						    {% endif %}
+                            {% assign cartOriginData = cartOriginDataTemp  %}
+            				{% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
                         {% endif %}
                     {%endfor%}
-                    {% assign cartOriginData = cartOriginDataTemp  %}
-                    {% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
+alert("loop:"+"{{forloop.index}}"+"over");
                 {%endfor%}
             {% else %}
                 // --- indicate the for current bundle, no matching variants in cart
-                // --- 1. leave cartOriginArr not changed
-                // --- 2. reset cartAddedData to "", in case last cartAddedData would be append again, even though current bundle has no match
-
             {% endif %}
 
-        {%endfor%}
-
-
 //--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
-document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
+document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+'{{cartOriginData}}' + "<br>" +'{{cartAddedData}}';
             {% for originItemStr in cartOriginArr  %}
                 {% assign originItemTriple = originItemStr | split: ":" %}
                 {% assign originItemPair = originItemTriple[0] | append: ":" | append: originItemTriple[2] | append:"\n"  %}
                 {% assign cartFinalData = cartFinalData | append: originItemPair  %}
             {%endfor%}
-// document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+"{{cartFinalData}}";
+// document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+'{{cartFinalData}}';
 
             {% assign cartFinalData = cartFinalData | append: cartAddedData %}
+        {%endfor%}
+
+
 
 //===============================================================================================
 //--  ## 10 ##  compare "cartBeginData" and "cartFinalData", make delete/add AJAX call based on comparason result -->
         {% assign cartBeginData = cartBeginData |strip | split:"\n" | sort | join: "\n" %}
         {% assign cartFinalData = cartFinalData |strip | split:"\n" | sort | join: "\n" %}
-document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+"{{cartBeginData}}" + "<br>" +"{{cartFinalData}}";
+document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+'{{cartBeginData}}' + "<br>" +'{{cartFinalData}}';
         {% if cartBeginData != cartFinalData %}
             {% assign cartBeginArr = cartBeginData | strip | split:"\n" %}
             {% assign cartFinalArr = cartFinalData | strip | split:"\n" %}
@@ -242,7 +220,7 @@ document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"
             {% assign toBeAddedArr   = toBeAdded   | strip | split:"\n" %}
 
 //--  ## 13 ##  Make AJAX call to delete/add arr, based on toBeDeletedArr/toBeAddedArr -->
-document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"{{toBeAdded}}" + "<br>" +"{{toBeDeleted}}";
+document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+'{{toBeAdded}}' + "<br>" +'{{toBeDeleted}}';
 
             {% for toBeDeleteItemStr in toBeDeletedArr %}
             		{% assign toBeDeleteItem = toBeDeleteItemStr | split:":" %}
@@ -271,7 +249,7 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"
                 xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhttp.send("id={{toBeAddedItem[0]}}&quantity={{toBeAddedItem[1]}}");
             {% endfor %}
-                     	location.reload();
+//                      	location.reload();
         {% else %}
 //                         alert("No change, So no need to call AJAX!");
         {% endif %}
@@ -279,40 +257,4 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"
 
 window.onload = load;
 
-</script>';
-
-
-//-------------------------------------------------------------------------------
-    $para = array(
-      "key" => "snippets/bundleCheck.liquid",
-      "value" => $codeInject
-    );
-    $bundleCheckSnippet = $shopify->Theme($themeID)->Asset->put($para) ;
-
-
-
-//-----## 2  ## insert the statement: {% include "bundleCheck" %} to "theme.liquid" file  -->
-    // find out theme.liquid, based on themeID already got
-    $para = array(
-      "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
-    );
-    $themeContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
-    // find out <head> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
-    $posOfHead = strpos( $themeContent, '<head>');
-    $statementInject = "\n" . "  {% include 'bundleCheck' %}";
-    $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfHead+6, 0 );
-    // insert statement  "{% include 'bundleCheck' %}", right after <head> tag
-    $para = array(
-      "key" => "layout/theme.liquid",
-      "value" => $themeContentNew
-    );
-    $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
-
-                                                echo '<h1>$shopify below : </h1>' .  "\n";
-                                                echo "<pre>";
-                                                print_r ($themeContentNew);
-                                                echo "</pre>";
-                                                echo '<p> ------------------------  </p>' .  "\n";
-
-
-?>
+</script>
