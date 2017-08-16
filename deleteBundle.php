@@ -14,13 +14,14 @@ $originVtoShadowVArr = explode( "\n" , $originVtoShadowV);
 
 //====================== Delete All Things =====================================
 if(isset($_GET['type']) && $_GET['type'] == 'all' ){
+
       //---------------------- delete all metafiled ------------------------
       $meta = $shopify->Metafield->get();
       foreach( $meta as $oneItem ){
           $shopify->Metafield($oneItem['id'])->delete();
       }
 
-      //---------------------- delete all shadow product --------------------
+      //---------------------- delete all shadow products --------------------
       $vendorPara = array(
           'vendor' => 'Products On Sales',
       );
@@ -51,9 +52,11 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
           }
       }
 
+
+
 //====================== Delete things Based on user input ====================
 }else{
-      
+
       foreach( $originVtoShadowVArr as $oneLine ){
           $lineItemArr = explode("#",$oneLine);
           echo $lineItemArr[1]."\n";

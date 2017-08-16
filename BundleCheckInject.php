@@ -85,13 +85,14 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
         {% assign Bundles = shop.metafields.bundleInfo.bundleDetail |  newline_to_br | strip_newlines | split: "<br />"  %}
 
       	{% for bundleStr in Bundles %}
-// alert("{{bundleStr}}");
-            {% assign cartOriginArr = cartOriginData | strip | split: "\n"  %}
-      			{% assign bundle = bundleStr | strip | split:"#" %}
+            {% assign bundleInfo = bundleStr | strip | split:"@" | last %}
+      			{% assign bundle = bundleInfo | strip | split:"#" %}
             {% assign BDID = bundle | first %}
             {% assign BD = bundle | last %}
             {% assign BDArray = BD | split:","  %}
             {% assign min = 1000000 %}
+            {% assign cartOriginArr = cartOriginData | strip | split: "\n"  %}
+
 
 //--  ## 3 ## BDOne is one pair of originProductID:discount  -->
             {% for BDOne in BDArray %}

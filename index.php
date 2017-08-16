@@ -143,8 +143,24 @@
     echo '<td>';
         echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Product Bundle:</legend>';
+        echo '<div>
+                  <label> Weight: </label><input name="weight" type="number" min=0 max=10 value=1 />
+              </div>';
+        echo '<hr />';
+        echo '<div>
+                  <p> Bundle Type: </p>
+                  <label> 0: </label><input name="bundleType" type="radio" value=0 checked />
+              </div>';
+        echo '<hr />';
+        echo '<div>
+                  <p> Discount Type: </p>
+                  <label> 0: </label><input name="discountType" type="radio" value=0 checked />
+                  <label> 1: </label><input name="discountType" type="radio" value=1  />
+              </div>';
+
         echo '<table border="1", border-collapse="collapse"; >';
         echo '  <tr><th>Select</th>
+                    <th>Parameters</th>
                     <th>Id</th>
                     <th>Name</th>
                     <th>Image</th>
@@ -154,6 +170,7 @@
           $itemNum = $k;
           echo '<tr>
                     <td><input id="product'.$k.'" onchange="check(event)" type="checkbox" name="productItem[]" value="'.$p['id'].'">' .$p['title'].'<br>'.'</td>
+                    <td></td>
                     <td>' .$p['id']. '</td>
                     <td>' .$p['title']. '</td>
                     <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
@@ -174,16 +191,32 @@
     echo '<td>';
         echo '<form action="addBundle.php", method="get">';
         echo '<fieldset><legend>Collection Bundle:</legend>';
+        echo '<div>
+                  <label> Weight: </label><input name="weight" type="number" min=0 max=10 value=1 />
+              </div>';
+        echo '<hr />';
+        echo '<div>
+                  <p> Bundle Type: </p>
+                  <label> 1: </label><input name="bundleType" type="radio" value=1 checked />
+              </div>';
+        echo '<hr />';
+        echo '<div>
+                  <p> Discount Type: </p>
+                  <label> 0: </label><input name="discountType" type="radio" value=0 checked />
+                  <label> 1: </label><input name="discountType" type="radio" value=1  />
+              </div>';
         echo '<table border="1">';
         echo '  <tr><th>Select</th>
+                    <th>Parameters</th>
                     <th>Id</th>
                     <th>Name</th>
                     <th>Image</th>
                 </tr>';
-        foreach($collection as $c){
+        foreach($collection as $k=>$c){
           if( $c['title'] !== 'all' ){ // not show the 'all' collection, no meaninng.
             echo '<tr>
-                      <td><input type="checkbox" name="collectionItem[]" value="'.$c['id'].'">' .$c['title'].'</td>
+                      <td><input id="collection'.$k.'" onchange="check(event)" type="checkbox" name="productItem[]" value="'.$c['id'].'">' .$c['title'].'<br>'.'</td>
+                      <td></td>
                       <td>' .$c['id']. '</td>
                       <td>' .$c['title']. '</td>
                       <td><img src=" ' .$c['image']['src']. ' "; style="width:128px;height:128px;"></td>
@@ -211,7 +244,7 @@
                                 print_r($collection);
                                 echo "</pre>";
                                 echo '<p> ------------------------  </p>' .  "\n";
-                                echo "</pre>";
+                                echo "</ pre>";
 
                             //--------------------- display $product obj---------------------
                                 echo '<h1>3.  $products below : </h1>' . "\n";
@@ -236,26 +269,32 @@
         <script>
         <?php
           echo "function check(event) {"."\n";
-            echo "if( event.target.nextElementSibling.nextElementSibling == null ){"."\n";
-              echo "if( event.target.checked ){ "."\n";
-                echo 'x = document.createElement("input");'."\n";
-                echo 'x.setAttribute("type", "text");'."\n";
-                echo 'x.setAttribute("class", "productDiscount");'."\n";
-                echo 'x.setAttribute("name", "productDiscount[]");'."\n";
-                echo 'x.setAttribute("value", "1");'."\n";
-                echo 'event.target.closest("td").appendChild(x);'."\n";
-              echo "}"."\n";
-            echo "}else{"."\n";
-              echo "if( !event.target.checked ){ "."\n";
-                echo 'checkboxParent = event.target.closest("td");'."\n";
-                echo 'checkboxParent.removeChild(checkboxParent.lastChild);'."\n";
-              echo "}"."\n";
-            echo "}"."\n";
+          echo '  secendTd= event.target.closest("td").nextElementSibling;'."\n";
+          echo '  if( secendTd.childElementCount == 0 ){'."\n";
+          echo "     if( event.target.checked ){ "."\n";
+          // discount label
+          echo '        x = document.createElement("LABEL");'."\n";
+          echo '        text = document.createTextNode("Discount input:");'."\n";
+          echo '        x.appendChild(text);'."\n";
+          echo '        secendTd.appendChild(x);'."\n";
+          // discount input
+          echo '        x = document.createElement("input");'."\n";
+          echo '        x.setAttribute("type", "txt");'."\n";
+          echo '        x.setAttribute("name", "discount[]");'."\n";
+          echo '        x.setAttribute("value", "0");'."\n";
+          echo '        secendTd.appendChild(x);'."\n";
+          echo "     }"."\n";
+
+          echo "  }else{"."\n";
+          echo "     if( !event.target.checked ){ "."\n";
+          echo '        while (secendTd.firstChild) {'."\n";
+          echo '            secendTd.removeChild(secendTd.firstChild);'."\n";
+          echo "        }"."\n";
+          echo "     }"."\n";
+          echo "  }"."\n";
           echo '}'."\n";
 
-
           echo "function validCheck() {"."\n";
-
           echo '}'."\n";
         ?>
         </script>
