@@ -6,12 +6,6 @@
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
 
-
-//------------ ## -1 ## DELETE metafield ---------------
-$fileNameOriginVtoShadowV = $_SESSION["shopUrl"] . "OriginVtoShadowV.txt";
-$originVtoShadowV = file_get_contents($fileNameOriginVtoShadowV);
-$originVtoShadowVArr = explode( "\n" , $originVtoShadowV);
-
 //====================== Delete All Things =====================================
 if(isset($_GET['type']) && $_GET['type'] == 'all' ){
 
@@ -32,7 +26,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
       $allShadowProduct = $shopify->Product->get($vendorPara);
       echo "All Shadow Products is deleted. Now shadow product number is:" . count($allShadowProduct) . "\n";
 
-      //---------------------  delete all file ------------------------------
+      //---------------------  delete all files ------------------------------
       $files = [
                   $_SESSION["shopUrl"] . "ShopBundle.txt",
                   $_SESSION["shopUrl"] . "shadowVToOriginV.txt",
@@ -52,10 +46,58 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
           }
       }
 
+      //--------------------- delete injected code snippet ---------------------
+      // find out the main Theme.liquid, and its ID
+      $themes = $shopify->Theme->get();
+      $numsOfThemes = count($theme);
+      $themeID = 0;
+      foreach( $themes as $oneTheme ){
+        if($oneTheme['role'] === 'main'){
+          $themeID = $oneTheme['id'];
+          break;
+        }
+      }
+
+      // get the cotent of main Theme
+      $para = array(
+        "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $themeContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
 
 
-//====================== Delete things Based on user input ====================
+      // find out </body> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
+      // only if there doesn't exist such insertion before, we insert this code snippet. Otherwise, do nothing.
+      $codeStr = "{% if template == 'cart' %}{% include 'bundleCheck' %}{% endif %}";
+      $codeStartPos = strpos( $themeContent, $codeStr );
+      if( $codeStartPos !== false ){
+          $codeLength = strlen( $codeStr );
+          $emptyStr = "";
+          $themeContentNew = substr_replace( $themeContent , $emptyStr,  $codeStartPos, $codeLength );
+
+          // delete inserted code by replacing it with empty string
+          $para = array(
+            "key" => "layout/theme.liquid",
+            "value" => $themeContentNew
+          );
+          $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
+
+                                                      echo '<h1>$shopify below : </h1>' .  "\n";
+                                                      echo "<pre>";
+                                                      print_r ($themeContentNew);
+                                                      echo "</pre>";
+                                                      echo '<p> ------------------------  </p>' .  "\n";
+      }else{
+                                                      echo '<h1> There is no injected code  </h1>' .  "\n";
+      }
+
+
+
+//====================== Delete partial things Based on user input ====================
 }else{
+      //------------ ## 1 ## DELETE metafield ---------------
+      $fileNameOriginVtoShadowV = $_SESSION["shopUrl"] . "OriginVtoShadowV.txt";
+      $originVtoShadowV = file_get_contents($fileNameOriginVtoShadowV);
+      $originVtoShadowVArr = explode( "\n" , $originVtoShadowV);
 
       foreach( $originVtoShadowVArr as $oneLine ){
           $lineItemArr = explode("#",$oneLine);
@@ -76,7 +118,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
 //    3.1 delete shadow product based on the productID found in last Step
 //    3.2 delete
 //------------ ## 1 ## delete shop.metafield, based on "shop.MetafieldID.txt"--------
-//  bundleInfo.bundleNum | bundleInfo.bundleDetail | originToShadow.originVariantID
+//  bundleInfo.bundleDetail | originToShadow.originVariantID( shadowVariantID,shadowProductID,shadowCollection)
 
 
 //------------ ## 2 ## delete shadow product, based on "shop.BundleToShadowProduct.txt"------

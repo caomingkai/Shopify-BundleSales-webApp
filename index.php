@@ -55,15 +55,15 @@
     $collection = array_merge($customCollection, $smartCollection);
     $_SESSION["config"] = $config;
     $_SESSION["collection"] = $collection;
-                                    echo "<pre>";
-                                    echo '<h1>customCollection:</h1>'."\n";
-                                    print_r($customCollection);
-                                    echo "</pre>";
-
-                                    echo "<pre>";
-                                    echo '<h1>smartCollection:</h1>'."\n";
-                                    print_r($smartCollection);
-                                    echo "</pre>";
+                                    // echo "<pre>";
+                                    // echo '<h1>customCollection:</h1>'."\n";
+                                    // print_r($customCollection);
+                                    // echo "</pre>";
+                                    //
+                                    // echo "<pre>";
+                                    // echo '<h1>smartCollection:</h1>'."\n";
+                                    // print_r($smartCollection);
+                                    // echo "</pre>";
     // check if exists all in smartCollection
     $numOfSmartC = sizeof($smartCollection);
     $all_ExistFlag = false;
@@ -130,18 +130,51 @@
     }else{      // read from productInfo.txt
       $file = "productInfo.txt";
       $infoAll = file_get_contents($fileName);
-      echo "<pre>";
-      echo $infoAll;
-      echo "</pre>";
+                                                          // echo "<pre>";
+                                                          // echo $infoAll;
+                                                          // echo "</pre>";
     }
 
+//-----------------------Existing bundle Info--------------------------------
+//---------------------------------------------------------------------------
+    echo '<table border="1", border-collapse="collapse";>
+            <tr>'."\n";
+    echo '    <th>Weight</th><th>bundle Type</th><th>discount Type</th><th>bundle ID</th><th>bundle Detail</th>'."\n";
+    echo '  </tr>'."\n";
 
+    $fileName = $_SESSION["shopUrl"] . "ShopBundle.txt";
+    if( file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
+      $bundleInfoAll = file_get_contents($fileName);
+      $bundleInfoArr = explode("\n" , trim($bundleInfoAll) );
+      $num = count($bundleInfoArr);
+      if( $num > 0 ){
+        foreach( $bundleInfoArr as $bundle ){
+          $bundleWeight = explode("*" , $bundle )[0];
+          $left_1 = explode("*" , $bundle )[1];
+          $bundleType = explode("&" , $left_1 )[0];
+          $left_2 = explode("&" , $left_1 )[1];
+          $discountType = explode("@" , $left_2 )[0];
+          $left_3 = explode("@" , $left_2 )[1];
+          $bundleId = explode("#" , $left_3 )[0];
+          $bundleDetail = explode("#" , $left_3 )[1];
+    echo '  <tr>'."\n";
+    echo '    <td>'; echo $bundleWeight; echo'</td>'."\n";
+    echo '    <td>'; echo $bundleType; echo'</td>'."\n";
+    echo '    <td>'; echo $discountType; echo'</td>'."\n";
+    echo '    <td>'; echo $bundleId; echo'</td>'."\n";
+    echo '    <td>'; echo $bundleDetail; echo'</td>'."\n";
+    echo '  </tr>'."\n";
+        }
+      }
+    }
+    echo '</table>'."\n";
 
-//-----------------------Outter wrapper table------------------------
+//-----------------------Outter wrapper table--------------------------------
+//---------------------------------------------------------------------------
     echo '<table><tr>';
 //------------------ ## 3 ## This is for Product Bunlde Selection-------------
     echo '<td>';
-        echo '<form action="addBundle.php", method="get">';
+        echo '<form action="addBundle.php", method="get" target="_blank">';
         echo '<fieldset><legend>Product Bundle:</legend>';
         echo '<div>
                   <label> Weight: </label><input name="weight" type="number" min=0 max=10 value=1 />
@@ -173,7 +206,7 @@
                     <td></td>
                     <td>' .$p['id']. '</td>
                     <td>' .$p['title']. '</td>
-                    <td><img src=" ' .$p['image']['src']. ' "; style="width:128px;height:128px;"></td>
+                    <td><img src=" ' .$p['image']['src']. ' "; style="width:52px;height:52px;"></td>
                 </tr>';
         }
         echo '</table>';
@@ -189,7 +222,7 @@
 
 //------------------## 4 ## This is for Collection Bunlde Selection-------------
     echo '<td>';
-        echo '<form action="addBundle.php", method="get">';
+        echo '<form action="addBundle.php", method="get" target="_blank">';
         echo '<fieldset><legend>Collection Bundle:</legend>';
         echo '<div>
                   <label> Weight: </label><input name="weight" type="number" min=0 max=10 value=1 />
@@ -219,7 +252,7 @@
                       <td></td>
                       <td>' .$c['id']. '</td>
                       <td>' .$c['title']. '</td>
-                      <td><img src=" ' .$c['image']['src']. ' "; style="width:128px;height:128px;"></td>
+                      <td><img src=" ' .$c['image']['src']. ' "; style="width:52px;height:52px;"></td>
                   </tr>';
           }
         }

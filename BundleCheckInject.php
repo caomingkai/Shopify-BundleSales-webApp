@@ -25,8 +25,8 @@ function load(){
 //=================================================================================================
 //--  ## 0 ## convert all products including shadow product into cartOriginData -->
 //=================================================================================================
-		{% assign cartAddedData  = "" %}
-  		{% assign cartBeginData  = "" %}
+				{% assign cartAddedData  = "" %}
+	  		{% assign cartBeginData  = "" %}
         {% assign cartFinalData  = "" %}
         {% assign cartOriginData = "" %}
     //-------------------------------------------------------------------------------------------------------
@@ -38,14 +38,22 @@ function load(){
     //-------------------------------------------------------------------------------------------------------
         {% for item in cart.items %}
 			      {% assign variantID = item.variant_id|append:"" %}
-            {% assign itemOriginVPStr = item.variant.metafields.shadowToOrigin[variantID]   %}
-    			  {% if itemOriginVPStr  %}
-                {% assign cartOriginVPStr = itemOriginVPStr  %}
+
+            {% assign itemOriginVPCStr = item.variant.metafields.shadowToOrigin[variantID]   %}
+						{% if itemOriginVPCStr  %}
+                {% assign cartOriginVPCStr = itemOriginVPCStr  %}
             {% else %}
-          	    {% assign cartOriginVPStr = item.variant_id |append: ":" |append: item.product_id  %}
+								//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+								{% assign cartOriginCStr = "" %}
+								{% for collection in item.product.collections %}
+										{% assign cartOriginCStr = cartOriginCStr | append: "," | append: collection.id   %}
+								{% endfor %}
+								{% assign cartOriginCStr = cartOriginCStr | remove_first: ","  %}
+								//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          			{% assign cartOriginVPCStr = item.variant_id |append: ":" |append: item.product_id |append: ":" |append: cartOriginCStr %}
             {% endif %}
-  					{% assign cartOriginData = cartOriginData | append:cartOriginVPStr  | append: ":"| append: item.quantity | append: "\n"  %}
-            {% assign cartBeginData  = cartBeginData  | append: item.variant_id | append: ":"| append: item.quantity | append: "\n" %}
+  					{% assign cartOriginData = cartOriginData | append:cartOriginVPCStr  | append: ":"| append: item.quantity | append: "\n"  %}
+            {% assign cartBeginData  = cartBeginData  | append: item.variant_id  | append: ":"| append: item.quantity | append: "\n" %}
         {%endfor%}
 
 //=================================================================================================
@@ -67,11 +75,11 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{
   						  {% for cartOriginItemTemp  in cartOriginArrTemp limit:loopLimit %}
                     {% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 | append: cartOriginItemTemp |append:"\n" %}
                 {% endfor %}
-  						  {% assign quantityNew = itemArr[2] | plus: cartOriginArrLastTempArr[2] %}
-  						  {% assign cartOriginStrLastTemp = itemArr[0]| append: ":" |append: itemArr[1]| append: ":" | append: quantityNew %}
+  						  {% assign quantityNew = itemArr[3] | plus: cartOriginArrLastTempArr[3] %}
+  						  {% assign cartOriginStrLastTemp = itemArr[0]| append: ":" |append: itemArr[1]| append: ":" | append: itemArr[2] | append: ":" | append: quantityNew  %}
         				{% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 | append: cartOriginStrLastTemp |append:"\n" %}
             {% else %}
-        				{% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 |append: cartOriginDataTemp | append: itemStr |append:"\n" %}
+        				{% assign cartOriginDataTemp_1 = cartOriginDataTemp_1 | append: cartOriginDataTemp | append: itemStr |append:"\n" %}
             {% endif %}
 // alert("{{cartOriginDataTemp_1}}");
             {% assign cartOriginDataTemp = cartOriginDataTemp_1 %}
@@ -82,10 +90,12 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 //=================================================================================================
 //--  ## 2 ## check each bundle to see if there exist matches in cart. bundle is one bundle_item containing info -->
 //=================================================================================================
-        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail |  newline_to_br | strip_newlines | split: "<br />"  %}
+        {% assign Bundles = shop.metafields.bundleInfo.bundleDetail |  newline_to_br | strip_newlines | split: "<br />" | sort  %}
+				{% for bundleStr in Bundles %}
+// alert("{{bundleStr}}");
+            {% assign bundleType = bundleStr | strip | split:"&" | first | split:"*" | last  %}
+						{% assign bundleInfo = bundleStr | strip | split:"@" | last %}
 
-      	{% for bundleStr in Bundles %}
-            {% assign bundleInfo = bundleStr | strip | split:"@" | last %}
       			{% assign bundle = bundleInfo | strip | split:"#" %}
             {% assign BDID = bundle | first %}
             {% assign BD = bundle | last %}
@@ -97,15 +107,34 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 //--  ## 3 ## BDOne is one pair of originProductID:discount  -->
             {% for BDOne in BDArray %}
                 {% assign BDOnePair = BDOne | split:":"   %}
-                {% assign BDOneProductId = BDOnePair | first  %}
+                {% assign BDOneId = BDOnePair | first  %}
                 {% assign cnt = 0 %}
 
 //--  ## 4 ## find out if there exists such bundle pattern in cart depending on cnt?=0 , meanwhile, record quantity of this combo -->
                 {% for itemStr in cartOriginArr  %}
                     {% assign itemArr = itemStr | split: ":"  %}
-                    {% if itemArr[1] ==  BDOneProductId  %}
-                        {% assign cnt = cnt | plus: itemArr[2]  %}
-                    {% endif %}
+//~~~~~~~~~~~~~~~~~~~~~depend on bundle type to determine if bundle exist~~~~~~~~
+										{% if  bundleType == "0" %}
+// alert("bundleType == 0");
+			                  {% if itemArr[1] ==  BDOneId  %}
+			                      {% assign cnt = cnt | plus: itemArr[3]  %}
+			                  {% endif %}
+										{% else %}
+// alert("bundleType == 1");
+												{% assign flag = false  %}
+												{% assign colletionIdArr = itemArr[2] | split: ","  %}
+												{% for colletionId in colletionIdArr  %}
+														{% if colletionId == BDOneId  %}
+																{% assign flag = true  %}
+																{% break %}
+														{% endif %}
+												{%endfor%}
+												{% if flag == true  %}
+														{% assign cnt = cnt | plus: itemArr[3]  %}
+												{% endif %}
+// alert("{{cnt}}");
+										{% endif %}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 {%endfor%}
 // alert("cnt:"+"{{cnt}}");
                 {% if cnt == 0  %}
@@ -125,7 +154,7 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
       			{% if min != 1000000 %}
                 {% for BDOne in BDArray %}
                     {% assign BDOnePair = BDOne | split:":"   %}
-                    {% assign BDOneProductId = BDOnePair | first  %}
+                    {% assign BDOneId = BDOnePair | first  %}
 
                     {% assign minTemp = min %}
                     {% assign cartOriginDataTemp = cartOriginData %}
@@ -133,7 +162,25 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                     {% for itemStr in cartOriginArr  %}
                         {% assign itemArr = itemStr | split: ":"  %}
                         {% assign cartOriginArrTemp = cartOriginDataTemp | strip | split: "\n" | sort  %}
-                        {% if itemArr[1] ==  BDOneProductId  %}
+//~~~~~~~~~~~~~~~~~~~~~If any type of collection or product matchs, then update cartOriginData and cartAddedData ~~~~~~~~
+												{% assign itemMatchFlag = false  %}
+					              {% if itemArr[1] ==  BDOneId  %}
+					                      {% assign itemMatchFlag = true  %}
+					              {% endif %}
+
+												{% assign flag = false  %}
+												{% assign colletionIdArr = itemArr[2] | split: ","  %}
+												{% for colletionId in colletionIdArr  %}
+														{% if colletionId == BDOneId  %}
+																{% assign flag = true  %}
+																{% break %}
+														{% endif %}
+												{%endfor%}
+												{% if flag == true  %}
+														{% assign itemMatchFlag = true  %}
+												{% endif %}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        {% if itemMatchFlag == true  %}
 //--  ## 6 ##  find corresponding shadow variant for origin variant, based on bundleID  -->
                             {% assign originToShadowArr = shop.metafields.originToShadow[itemArr[0]] | split: ","  %}
                             {% for OTSStr in originToShadowArr  %}
@@ -145,22 +192,22 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 
 //--  ## 7 ##  delete  origin variant in cartOriginArr, based on the found shadowID, record updated variant in originFinalData and added shadow variant in shadowFinalData  -->
                             {% assign itemNeedChange = itemArr[0]  %}
-		                        {% assign itemQuantity =   itemArr[2] | plus:0 %}
-                            	{% if itemQuantity <= minTemp  %}
+		                        {% assign itemQuantity =   itemArr[3] | plus:0 %}
+                            {% if itemQuantity <= minTemp  %}
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
                                 {% assign temp = "" %}
                                 {% for itemStrTemp in cartOriginArrTemp  %}
-      							{% assign itemArrTemp = itemStrTemp | split:":" %}
+      															{% assign itemArrTemp = itemStrTemp | split:":" %}
 // alert("{{itemArrTemp[0]}}"+":"+"{{itemNeedChange}}");
                                     {% if itemArrTemp[0] != itemNeedChange  %}
                                         {% assign temp = temp | append: itemStrTemp | append:"\n" %}
                                     {% endif %}
                                 {%endfor%}
                                 {% assign cartOriginDataTemp = temp %}
-                                {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[2] | append: "\n" %}
-                                {% assign minTemp = minTemp | minus: itemArr[2] %}
+                                {% assign cartAddedData = cartAddedData | append: shadowVarID | append:":"| append: itemArr[3] | append: "\n" %}
+                                {% assign minTemp = minTemp | minus: itemArr[3] %}
                             {% else %}
-                                {% assign quantityNew = itemArr[2] | minus: minTemp  %}
+                                {% assign quantityNew = itemArr[3] | minus: minTemp  %}
 //--  ## 8 ##  update cartOriginArr, since there are origin deleted, and the quantity are now changed -->
                                 {% assign temp = "" %}
                                 {% for itemStrTemp in cartOriginArrTemp  %}
@@ -168,7 +215,7 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                                     {% if itemArrTemp[0] != itemNeedChange  %}
                                         {% assign temp = temp | append: itemStrTemp | append:"\n" %}
                                     {% else %}
-                                        {% assign itemStrChanged = itemArr[0] | append :":"| append : itemArr[1] | append :":"| append: quantityNew %}
+                                        {% assign itemStrChanged = itemArr[0] | append :":"| append : itemArr[1] | append :":"| append : itemArr[2]| append :":"| append: quantityNew  %}
                                         {% assign temp = temp | append: itemStrChanged | append:"\n" %}
                                     {% endif %}
                                 {%endfor%}
@@ -183,9 +230,6 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
                     {% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
                 {%endfor%}
             {% else %}
-                // --- indicate the for current bundle, no matching variants in cart
-                // --- 1. leave cartOriginArr not changed
-                // --- 2. reset cartAddedData to "", in case last cartAddedData would be append again, even though current bundle has no match
 
             {% endif %}
 
@@ -197,8 +241,8 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
             {% for originItemStr in cartOriginArr  %}
                 {% assign originItemTriple = originItemStr | split: ":" %}
-                {% assign originItemPair = originItemTriple[0] | append: ":" | append: originItemTriple[2] | append:"\n"  %}
-                {% assign cartFinalData = cartFinalData | append: originItemPair  %}
+                {% assign originItemTriple = originItemTriple[0] | append: ":" | append: originItemTriple[3] | append:"\n"  %}
+                {% assign cartFinalData = cartFinalData | append: originItemTriple  %}
             {%endfor%}
 // document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+"{{cartFinalData}}";
 
@@ -282,7 +326,8 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"
 
 window.onload = load;
 
-</script>';
+</script>
+';
 //-------------------------------------------------------------------------------
     $para = array(
       "key" => "snippets/bundleCheck.liquid",
@@ -290,6 +335,8 @@ window.onload = load;
     );
     $bundleCheckSnippet = $shopify->Theme($themeID)->Asset->put($para) ;
 
+    echo '<h1> 1. snippets/bundleCheck.liquid  Updated successfully </h1>' .  "\n";
+    echo '<br>' .  "\n";
 
 
 
@@ -305,25 +352,30 @@ window.onload = load;
 
 
     // find out </body> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
-    $posOfBodyEnd = strpos( $themeContent, '</body>');
-    $statementInject = "\n" . "  {% if template == 'cart' %} " . "\n"
-                            . "    {% include 'bundleCheck' %}". "\n"
-                            . "  {% endif %}"                  . "\n";
-    $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfBodyEnd, 0 );
+    // only if there doesn't exist such insertion before, we insert this code snippet. Otherwise, do nothing.
+    $codeExistPost = strpos( $themeContent, "{% include 'bundleCheck' %}");
+    if( $codeExistPost === false ){
+        $posOfBodyEnd = strpos( $themeContent, '</body>');
+        $statementInject = "\n" . "  {% if template == 'cart' %}{% include 'bundleCheck' %}{% endif %}" . "\n";
+        $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfBodyEnd, 0 );
 
 
-    // insert statement  "{% include 'bundleCheck' %}", right after <head> tag
-    $para = array(
-      "key" => "layout/theme.liquid",
-      "value" => $themeContentNew
-    );
-    $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
+        // insert statement  "{% include 'bundleCheck' %}", right after <head> tag
+        $para = array(
+          "key" => "layout/theme.liquid",
+          "value" => $themeContentNew
+        );
+        $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
 
-                                                echo '<h1>$shopify below : </h1>' .  "\n";
-                                                echo "<pre>";
-                                                print_r ($themeContentNew);
-                                                echo "</pre>";
-                                                echo '<p> ------------------------  </p>' .  "\n";
+                                                    echo '<h1>$shopify below : </h1>' .  "\n";
+                                                    echo "<pre>";
+                                                    print_r ($themeContentNew);
+                                                    echo "</pre>";
+                                                    echo '<p> ------------------------  </p>' .  "\n";
+    }else{
+                                                    echo '<h1> 2. already injected </h1>' .  "\n";
+    }
+
 
 
 ?>
