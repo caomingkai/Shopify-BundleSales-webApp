@@ -36,6 +36,38 @@
         </div>
 <?php
 
+//-----------------------Existing bundle Info--------------------------------
+//---------------------------------------------------------------------------
+    define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
+    function verify_webhook($data, $hmac_header)
+    {
+      $calculated_hmac = base64_encode(hash_hmac('sha256', $data, SHOPIFY_APP_SECRET, true));
+
+      $fileName = 'calculated_hmac.txt';
+      file_put_contents($fileName, $calculated_hmac, LOCK_EX);
+
+      $fileName = 'hmac_header_inner.txt';
+      file_put_contents($fileName, $hmac_header, LOCK_EX);
+
+      return hash_equals($hmac_header, $calculated_hmac);
+    }
+
+
+    $hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
+    $fileName = 'hmac_header.txt';
+    file_put_contents($fileName, $hmac_header, LOCK_EX);
+
+    $data = file_get_contents('php://input');
+    $fileName = '11111111.txt';
+    file_put_contents($fileName, $data, LOCK_EX);
+
+    $verified = verify_webhook($data, $hmac_header);
+    $fileName = 'TrueOrFalse.txt';
+    file_put_contents($fileName, $verified, LOCK_EX);
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+
+
     require_once __DIR__ . '/vendor/autoload.php';
 
     $config = array(
@@ -52,9 +84,9 @@
     $shopify = new PHPShopify\ShopifySDK;
     $customCollection = $shopify->CustomCollection->get();
     $smartCollection = $shopify->SmartCollection->get();
-    $collection = array_merge($customCollection, $smartCollection);
+    $collections = array_merge($customCollection, $smartCollection);
     $_SESSION["config"] = $config;
-    $_SESSION["collection"] = $collection;
+    $_SESSION["collections"] = $collections;
                                     // echo "<pre>";
                                     // echo '<h1>customCollection:</h1>'."\n";
                                     // print_r($customCollection);
@@ -110,9 +142,7 @@
     $params = array(
       'collection_id' => $all_collectionID,
     );
-
     $products = $shopify->Product->get($params);
-    $_SESSION["products"] = $products;
 
     // set collection "all", in order to exclude those shadow products
     // 1. GET both CustomCollection and SmartCollection
@@ -122,18 +152,17 @@
 
     // check if {shopUrl}ProductInfo.txt exists
     $fileName = $_SESSION["shopUrl"] . "ProductInfo.txt";
-    if( !file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
-      foreach( $products as $p ){
-        $info .= $p["id"] . "," . $p["title"] . "," . $p["image"]["src"] . "\n";
-        file_put_contents($fileName, $info, LOCK_EX);
-      }
-    }else{      // read from productInfo.txt
-      $file = "productInfo.txt";
-      $infoAll = file_get_contents($fileName);
-                                                          // echo "<pre>";
-                                                          // echo $infoAll;
-                                                          // echo "</pre>";
+    $info = "";
+    foreach( $products as $p ){
+      $info .= $p["id"] . "," . $p["handle"] . "," . $p["title"] . "," . $p["image"]["src"] . "\n";
     }
+
+    foreach( $collections as $c ){
+      $info .= $c["id"] . "," . $c["handle"] . "," . $c["title"] . "," . $c["image"]["src"] . "\n";
+    }
+    file_put_contents($fileName, $info, LOCK_EX);
+    file_put_contents($fileName, $info, LOCK_EX);
+    $_SESSION["productInfo"] = file_get_contents($fileName);
 
 //-----------------------Existing bundle Info--------------------------------
 //---------------------------------------------------------------------------
@@ -245,7 +274,7 @@
                     <th>Name</th>
                     <th>Image</th>
                 </tr>';
-        foreach($collection as $k=>$c){
+        foreach($collections as $k=>$c){
           if( $c['title'] !== 'all' ){ // not show the 'all' collection, no meaninng.
             echo '<tr>
                       <td><input id="collection'.$k.'" onchange="check(event)" type="checkbox" name="productItem[]" value="'.$c['id'].'">' .$c['title'].'<br>'.'</td>
@@ -271,10 +300,10 @@
                                 echo "</pre>";
                                 echo '<p> ------------------------  </p>' .  "\n";
 
-                            //--------------------- display $collection obj---------------------
-                                echo '<h1>2.  $collection below : </h1>' . "\n";
+                            //--------------------- display $collections obj---------------------
+                                echo '<h1>2.  $collections below : </h1>' . "\n";
                                 echo "<pre>";
-                                print_r($collection);
+                                print_r($collections);
                                 echo "</pre>";
                                 echo '<p> ------------------------  </p>' .  "\n";
                                 echo "</ pre>";
