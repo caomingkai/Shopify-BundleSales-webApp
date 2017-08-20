@@ -1,31 +1,13 @@
 <?php
     if( isset( $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'] )){
 
-      require_once __DIR__ . '/vendor/autoload.php';
       require_once __DIR__ . '/webhookFun.php';
+
       define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
 
-      $file =  __DIR__ . '/install/merchantToken.txt';
-      $lines = explode("\n", file_get_contents($file));
-      $merchantHash = array();
-      forEach($lines as $oneLine ){
-        $keyValueArray = explode(",", $oneLine );
-        $merchantHash[$keyValueArray[0]] = $keyValueArray[1];
-      }
-      $accessToken = $merchantHash[$shopUrl];
-
-      $config = array(
-            'ShopUrl' => $shopUrl,
-            'AccessToken' => $accessToken,
-      );
-      PHPShopify\ShopifySDK::config($config);
-      $shopify = new PHPShopify\ShopifySDK;
-
-
-
-                                $server_variable = '<pre>' . print_r($_SERVER, true) . '</pre>';
-                                $fileName = 'server.txt';
-                                file_put_contents($fileName, $server_variable, LOCK_EX);
+      $server_variable = '<pre>' . print_r($_SERVER, true) . '</pre>';
+      $fileName = 'server.txt';
+      file_put_contents($fileName, $server_variable, LOCK_EX);
 
       function verify_webhook($data, $hmac_header)
       {

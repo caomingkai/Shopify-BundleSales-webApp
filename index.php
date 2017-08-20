@@ -52,10 +52,10 @@
     $shopify = new PHPShopify\ShopifySDK;
 
     //////////////////////
-    $originP = 8672070661;
-    $productInfo = $shopify->Product($originP)->get();
-    $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
-    file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
+    // $originP = 8672070661;
+    // $productInfo = $shopify->Product($originP)->get();
+    // $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
+    // file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
     //////////////////////
     //////////////////////
 // $originP = 8672070661;

@@ -1,7 +1,6 @@
 <?php
-session_start();
-//======================== fun setwebhook ========================
-//================================================================
+//======================== fun setwebhook ======================================
+//==============================================================================
     function setwebhook($shopify){
 
 //--1--  set 'products/create' webhook for product_creat and app_uninstall ------
@@ -41,9 +40,27 @@ session_start();
 
 
 
-//======================== fun updateInventory ========================
-//=====================================================================
+//======================== fun updateInventory ====================================================
+//=================================================================================================
     function updateInventory($dataStr, $shopify, $shopUrl ){
+
+        require_once __DIR__ . '/vendor/autoload.php';
+        define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
+
+        $file =  __DIR__ . '/install/merchantToken.txt';
+        $lines = explode("\n", file_get_contents($file));
+        $merchantHash = array();
+        forEach($lines as $oneLine ){
+          $keyValueArray = explode(",", $oneLine );
+          $merchantHash[$keyValueArray[0]] = $keyValueArray[1];
+        }
+        $accessToken = $merchantHash[$shopUrl];
+        $config = array(
+              'ShopUrl' => $shopUrl,
+              'AccessToken' => $accessToken,
+        );
+        PHPShopify\ShopifySDK::config($config);
+        $shopify = new PHPShopify\ShopifySDK;
 
 
         $fileName = 'function_updateinventory_dataStr.txt';
@@ -86,6 +103,10 @@ session_start();
         $fileName = 'function_updateinventory_shadowVToOriginPV.txt';
         file_put_contents($fileName, print_r($shadowVToOriginPV,true), LOCK_EX);
 
+        $productInfo = "aaaaaaaaaaaaaaaa";
+        $fileName = 'function_updateinventory_shadowVToOriginPV11111111.txt';
+        file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
+
         foreach( $shadowItems as $shadowVar=>$shadowQty ){
             $originP = $shadowVToOriginPV[$shadowVar][0];
             $originV = $shadowVToOriginPV[$shadowVar][1];
@@ -97,11 +118,10 @@ session_start();
                 // this is a "new created order" : need to minus quantity
                 $para = array( "inventory_quantity_adjustment" => -$shadowQty );
             }
-            $originP = 8672070661;
-            $productInfo = $shopify->Product($originP)->get();
-            $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
-            file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
-
+                          // $oP = 8672070661;
+                          // $productInfo = $shopify->Product($oP)->get();
+                          // $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
+                          // file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
             $shopify->Product($originP)->Variant($originV)->put($para);
         }
     }
