@@ -36,38 +36,6 @@
         </div>
 <?php
 
-//-----------------------Existing bundle Info--------------------------------
-//---------------------------------------------------------------------------
-    define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
-    function verify_webhook($data, $hmac_header)
-    {
-      $calculated_hmac = base64_encode(hash_hmac('sha256', $data, SHOPIFY_APP_SECRET, true));
-
-      $fileName = 'calculated_hmac.txt';
-      file_put_contents($fileName, $calculated_hmac, LOCK_EX);
-
-      $fileName = 'hmac_header_inner.txt';
-      file_put_contents($fileName, $hmac_header, LOCK_EX);
-
-      return hash_equals($hmac_header, $calculated_hmac);
-    }
-
-
-    $hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
-    $fileName = 'hmac_header.txt';
-    file_put_contents($fileName, $hmac_header, LOCK_EX);
-
-    $data = file_get_contents('php://input');
-    $fileName = '11111111.txt';
-    file_put_contents($fileName, $data, LOCK_EX);
-
-    $verified = verify_webhook($data, $hmac_header);
-    $fileName = 'TrueOrFalse.txt';
-    file_put_contents($fileName, $verified, LOCK_EX);
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-
-
     require_once __DIR__ . '/vendor/autoload.php';
 
     $config = array(
@@ -82,6 +50,26 @@
 
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
+
+    //////////////////////
+    $originP = 8672070661;
+    $productInfo = $shopify->Product($originP)->get();
+    $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
+    file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
+    //////////////////////
+    //////////////////////
+// $originP = 8672070661;
+// $originV = 37696175173;
+// $shadowQty = 2;
+//
+// $para = array( "inventory_quantity_adjustment" => -$shadowQty );
+//
+// $variantMetafield = $shopify->Product($originP)->Variant($originV)->put($para);
+    //////////////////////
+    //////////////////////
+    //////////////////////
+
+    //-------------  get customCollection and smartCollection -----------------
     $customCollection = $shopify->CustomCollection->get();
     $smartCollection = $shopify->SmartCollection->get();
     $collections = array_merge($customCollection, $smartCollection);

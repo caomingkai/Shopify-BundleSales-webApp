@@ -137,7 +137,7 @@
       if( !$bundleExistFlag ){ // indicate this bundle is not duplicate
         $pairArray = explode("," , substr($BundleInfo, 0, -1) ); // remove the "\n"
         $bundleToShadowInfo = $BundleID . "#";          // for 'bundleToShadowP.txt'
-        $shadowToOriginInfo = "";                 // for 'shadowVToOriginV.txt'
+        $shadowToOriginInfo = "";                 // for 'shadowVToOriginPV.txt'
         $originPtoOriginVInfo = "";               // for 'OriginPToOriginV.txt'
         $originVtoShadowVInfo = "";               // for 'OriginVtoShadowV.txt'
                                                       // echo "-----------------------------------------------"."\n";
@@ -320,7 +320,7 @@
                                                         echo "---------------------------- "."\n";
           }
           $originVtoShadowVInfo .= $originVariantID . "#" . $thisField['id'] . "#" . $BundleID . ":" . $shadowVariantID . "\n";
-          $shadowToOriginInfo .= $shadowVariantID . "#" . $originVariantID . "\n" ;
+          $shadowToOriginInfo .= $shadowVariantID . "#" . $originProductID . "#" . $originVariantID . "\n" ;
         }
         $bundleToShadowInfo .=  $shadowProductID . ","   ;
         $originPtoOriginVInfo  .=  "\n";
@@ -337,7 +337,7 @@
 //--------## 5 ## update 'ShadowToOrigin.txt' | 'BundleToShadow.txt' ------------------------------
 
       $bundleToShadowInfo = substr_replace( $bundleToShadowInfo, "\n", -1, 1);
-      $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "shadowVToOriginV.txt";
+      $fileNameShadowToOrigin = $_SESSION["shopUrl"] . "shadowVToOriginPV.txt";
       $fileNameBundleToShadow = $_SESSION["shopUrl"] . "BundleToShadowP.txt";
       $fileNameOriginPtoOriginV = $_SESSION["shopUrl"] . "OriginPtoOriginV.txt";
       $fileNameOriginVtoShadowV = $_SESSION["shopUrl"] . "OriginVtoShadowV.txt";

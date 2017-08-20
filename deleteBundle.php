@@ -2,7 +2,7 @@
     session_start();
     require_once __DIR__ . '/vendor/autoload.php';
 
-//======================== App Uninstalled =====================================
+//===============App Uninstalled, delete corresponding AccessToken ==============
 if(isset($_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'] ) ){
   define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
   function verify_webhook($data, $hmac_header)
@@ -10,26 +10,38 @@ if(isset($_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'] ) ){
     $calculated_hmac = base64_encode(hash_hmac('sha256', $data, SHOPIFY_APP_SECRET, true));
     return hash_equals($hmac_header, $calculated_hmac);
   }
-  $verified = verify_webhook($data, $hmac_header);
-  $fileName = 'TrueOrFalse.txt';
-  file_put_contents($fileName, $verified, LOCK_EX);
 
   $hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
-  $fileName = 'hmac_header.txt';
-  file_put_contents($fileName, $hmac_header, LOCK_EX);
-
   $data = file_get_contents('php://input');
-  $fileName = '11111111.txt';
+  $fileName = 'appDeleteInfo.txt';
   file_put_contents($fileName, $data, LOCK_EX);
 
-  echo "<pre>";
-    print_r($data);
-  echo "</pre>";
+  $verified = verify_webhook($data, $hmac_header);
+  $fileName = 'webhookVerifyResult.txt';
+  file_put_contents($fileName, $verified, LOCK_EX);
 
+  if( $verified === true ){
+    $fileToken =  __DIR__ . '/install/merchantToken.txt';
+    $tokenList = explode("\n", trim(file_get_contents($fileToken) ) ) ;
+    $tempList = array();
+
+    $shopDomain = $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'];
+    foreach( $tokenList as $i=> $tStr ){
+      $tPair =  explode( ","  ,  $tStr );
+      if( $tPair[0] !== $shopDomain ){
+        $tempList[] = $tStr;
+      }
+    }
+
+    $tokenListStr = "";
+    foreach( $tempList as $tempStr ){
+      $tokenListStr .= $tempStr . "\n";
+    }
+    file_put_contents($fileToken, $tokenListStr, LOCK_EX);
+  }
 
 
 }
-
 
 
 //====================== Delete All Things =====================================
@@ -60,7 +72,7 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
       //---------------------  delete all files ------------------------------
       $files = [
                   $_SESSION["shopUrl"] . "ShopBundle.txt",
-                  $_SESSION["shopUrl"] . "shadowVToOriginV.txt",
+                  $_SESSION["shopUrl"] . "shadowVToOriginPV.txt",
                   $_SESSION["shopUrl"] . "BundleToShadowP.txt",
                   $_SESSION["shopUrl"] . "OriginPtoOriginV.txt",
                   $_SESSION["shopUrl"] . "OriginVtoShadowV.txt",
@@ -120,6 +132,18 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
       }else{
                                                       echo '<h1> There is no injected code  </h1>' .  "\n";
       }
+
+
+      //--------------------- delete webhooks ---------------------
+        $webhooks = $shopify->Webhook->get();
+        foreach( $webhooks as $wh ){
+            if( $wh["topic"] !== "app/uninstalled"){
+                $shopify->Webhook($wh["id"])->delete();
+            }
+        }
+        $webhooks = $shopify->Webhook->get();
+        $fileName = 'deletedWebhooks.txt';
+        file_put_contents($fileName, json_encode($webhooks), LOCK_EX);
 
 
 

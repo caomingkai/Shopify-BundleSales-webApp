@@ -9,6 +9,7 @@
   // MUST be the very first thing in your document. Before any HTML tags.
   session_start();
   require_once __DIR__ . '/../vendor/autoload.php';
+  require_once __DIR__ . '/../webhookFun.php';
 
 //####################### global variants########################################
     $installed_flag = false;
@@ -35,6 +36,7 @@
       $keyValueArray = explode(",", $oneLine );
       $merchantHash[$keyValueArray[0]] = $keyValueArray[1];
     }
+
     if(isset( $_GET['shop']) ){
 
       $shopUrl = $_GET['shop'];
@@ -62,56 +64,68 @@
     //=============already installed , directly manipulate shop object==========
     if( $installed_flag ){
 
-      $_SESSION["accessToken"] = $accessToken;
-      $_SESSION["shopUrl"] = $_GET['shop'];
-      header("Location: /Shopify/3rdapp_public/index.php");
-      exit();
+        $_SESSION["accessToken"] = $accessToken;
+        $_SESSION["shopUrl"] = $_GET['shop'];
+
+        header("Location: /Shopify/3rdapp_public/index.php");
+        exit();
     //==============haven't install, have to install first =====================
     }else{
-      // ------------- Installation Step 1: askForAuthorization-----------------
-      // when merchant click "get", it is the APP URL in shopify partner panel that direct merchant to this script.
-      // we need to redirect merchant to the oauth page to let merchant to grant authorization to the app.
-      if( isset($_GET['shop'])  && !isset($_GET['code']) ){
-          $shopUrl = $_GET['shop'];
-          $scopes = "read_orders,read_products,write_products,read_themes,write_themes";
+        // Installation Step 1: askForAuthorization
+        // when merchant click "get", it is the APP URL in shopify partner panel that direct merchant to this script.
+        // we need to redirect merchant to the oauth page to let merchant to grant authorization to the app.
+        if( isset($_GET['shop'])  && !isset($_GET['code']) ){
+            $shopUrl = $_GET['shop'];
+            $scopes = "read_products,write_products,read_themes,write_themes,read_checkouts, write_checkouts,read_orders, write_orders";
 
-          $installUrl = "https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php";
-          header("Location: $installUrl");
-          exit();
-      }
+            $installUrl = "https://".$shopUrl."/admin/oauth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php";
+            header("Location: $installUrl");
+            exit();
+        }
 
-      // ------------- Installation Step 2: getAccessToken----------------------
-      // after merchant grant anthorization, and click "install" button
-      if( isset($_GET['shop'])  && isset($_GET['code']) ){
+        // Installation Step 2: getAccessToken
+        // after merchant grant anthorization, and click "install" button
+        if( isset($_GET['shop'])  && isset($_GET['code']) ){
 
-          $config = array(
-              'ShopUrl' => $_GET['shop'],
-              'ApiKey' => $apiKey,
-              'SharedSecret' => $secretKey,
-          );
-          PHPShopify\ShopifySDK::config($config);
-          $accessToken = \PHPShopify\AuthHelper::getAccessToken();
+            $config = array(
+                'ShopUrl' => $_GET['shop'],
+                'ApiKey' => $apiKey,
+                'SharedSecret' => $secretKey,
+            );
+            PHPShopify\ShopifySDK::config($config);
+            $accessToken = \PHPShopify\AuthHelper::getAccessToken();
 
-          $current = file_get_contents($file);
-          $current .= $_GET['shop']. "," .$accessToken."\n";
-          file_put_contents($file, $current,LOCK_EX);
+            $current = file_get_contents($file);
+            $current .= $_GET['shop']. "," .$accessToken."\n";
+            file_put_contents($file, $current,LOCK_EX);
 
-                // echo '<h1> Step 2(0): have not installed this app </h1>' .  "\n";
-                // echo "<h1> -----upper border----- </h1>"."\n";
-                // echo "<h1> this should be accessToken: " . $accessToken . " ,shound not be blank</h1>"."\n";
-                // echo "<h1> -----middle border----- </h1>"."\n";
-                // echo "<h1> this should be current text content: " . $current . " ,shound not be blank</h1>"."\n";
-                // echo "<h1> -----lower border----- </h1>"."\n";
+                  // echo '<h1> Step 2(0): have not installed this app </h1>' .  "\n";
+                  // echo "<h1> -----upper border----- </h1>"."\n";
+                  // echo "<h1> this should be accessToken: " . $accessToken . " ,shound not be blank</h1>"."\n";
+                  // echo "<h1> -----middle border----- </h1>"."\n";
+                  // echo "<h1> this should be current text content: " . $current . " ,shound not be blank</h1>"."\n";
+                  // echo "<h1> -----lower border----- </h1>"."\n";
+            // store $accessToken as global varible, for main php page use
+            $_SESSION["accessToken"] = $accessToken;
+            $_SESSION["shopUrl"] = $_GET['shop'];
 
-          // store $accessToken as global varible, for main php page use
-          $_SESSION["accessToken"] = $accessToken;
-          $_SESSION["shopUrl"] = $_GET['shop'];
+            //========================== set up webhook=========================
+            $config = array(
+                  'ShopUrl' => $_GET['shop'],
+                  'AccessToken' => $accessToken,
+            );
+            PHPShopify\ShopifySDK::config($config);
+            $shopify = new PHPShopify\ShopifySDK;
+            setwebhook($shopify);
+            //=====================insert bundleCheck snippet===================
+            require_once __DIR__ . '/../BundleCheckInject.php';
 
-          header("Location: /Shopify/3rdapp_public/index.php");
-          exit();
-
-      }
+            header("Location: /Shopify/3rdapp_public/index.php");
+            exit();
+        }
     }
+
+
 
 
 ?>

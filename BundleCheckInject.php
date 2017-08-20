@@ -1,11 +1,4 @@
 <?php
-    session_start();
-    require_once __DIR__ . '/vendor/autoload.php';
-
-    $config = $_SESSION["config"];
-    PHPShopify\ShopifySDK::config($config);
-    $shopify = new PHPShopify\ShopifySDK;
-
 //-----## 0 ## find out the main Theme.liquid, and its ID
     $themes = $shopify->Theme->get();
     $numsOfThemes = count($theme);
@@ -335,8 +328,8 @@ window.onload = load;
     );
     $bundleCheckSnippet = $shopify->Theme($themeID)->Asset->put($para) ;
 
-    echo '<h1> 1. snippets/bundleCheck.liquid  Updated successfully </h1>' .  "\n";
-    echo '<br>' .  "\n";
+    // echo '<h1> 1. snippets/bundleCheck.liquid  Updated successfully </h1>' .  "\n";
+    // echo '<br>' .  "\n";
 
 
 
@@ -367,13 +360,13 @@ window.onload = load;
         );
         $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
 
-                                                    echo '<h1>$shopify below : </h1>' .  "\n";
-                                                    echo "<pre>";
-                                                    print_r ($themeContentNew);
-                                                    echo "</pre>";
-                                                    echo '<p> ------------------------  </p>' .  "\n";
+                                                    // echo '<h1>$shopify below : </h1>' .  "\n";
+                                                    // echo "<pre>";
+                                                    // print_r ($themeContentNew);
+                                                    // echo "</pre>";
+                                                    // echo '<p> ------------------------  </p>' .  "\n";
     }else{
-                                                    echo '<h1> 2. already injected </h1>' .  "\n";
+                                                    // echo '<h1> 2. already injected </h1>' .  "\n";
     }
 
 
