@@ -53,7 +53,7 @@ function load(){
 //--  ## 1 ## merge common items in cartOriginData, update into new cartOriginData -->
 //=================================================================================================
       	{% assign cartOriginArr = cartOriginData | strip | split: "\n" | sort %}
-document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{cartOriginArr[0]}}" + "<br>" +"{{cartOriginArr[1]}}"+"<br>" +"{{cartOriginArr[2]}}";
+//document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{cartOriginArr[0]}}" + "<br>" +"{{cartOriginArr[1]}}"+"<br>" +"{{cartOriginArr[2]}}";
 				{% assign cartOriginDataTemp = "" %}
 				{% for itemStr in cartOriginArr %}
   					{% assign itemArr = itemStr | split: ":" %}
@@ -78,7 +78,7 @@ document.getElementById("bundle00").innerHTML = "<br>cartOriginData:"+"<br>"+"{{
             {% assign cartOriginDataTemp = cartOriginDataTemp_1 %}
   			{% endfor %}
   			{% assign cartOriginData = cartOriginDataTemp  %}
-document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartBeginData}}";
+//document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartBeginData}}";
 
 //=================================================================================================
 //--  ## 2 ## check each bundle to see if there exist matches in cart. bundle is one bundle_item containing info -->
@@ -231,13 +231,13 @@ document.getElementById("bundle").innerHTML = "<br>cartOriginData/cartBeginData"
 //=================================================================================================
 //--  ## 9 ##  此处：将shadowFinalData与originFinalData合成cartFinalData（quantity==0的舍弃） -->
 //=================================================================================================
-document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
+//document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData"+"<br>"+"{{cartOriginData}}" + "<br>" +"{{cartAddedData}}";
             {% for originItemStr in cartOriginArr  %}
                 {% assign originItemTriple = originItemStr | split: ":" %}
                 {% assign originItemTriple = originItemTriple[0] | append: ":" | append: originItemTriple[3] | append:"\n"  %}
                 {% assign cartFinalData = cartFinalData | append: originItemTriple  %}
             {%endfor%}
-// document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+"{{cartFinalData}}";
+// //document.getElementById("bundle0").innerHTML = "<br>cartFinalData"+"<br>"+"{{cartFinalData}}";
 
             {% assign cartFinalData = cartFinalData | append: cartAddedData %}
 
@@ -246,7 +246,7 @@ document.getElementById("bundle0").innerHTML = "<br>cartOriginData/cartAddedData
 //=================================================================================================
         {% assign cartBeginData = cartBeginData |strip | split:"\n" | sort | join: "\n" %}
         {% assign cartFinalData = cartFinalData |strip | split:"\n" | sort | join: "\n" %}
-document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+"{{cartBeginData}}" + "<br>" +"{{cartFinalData}}";
+//document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"+"<br>"+"{{cartBeginData}}" + "<br>" +"{{cartFinalData}}";
         {% if cartBeginData != cartFinalData %}
             {% assign cartBeginArr = cartBeginData | strip | split:"\n" %}
             {% assign cartFinalArr = cartFinalData | strip | split:"\n" %}
@@ -282,14 +282,14 @@ document.getElementById("bundle1").innerHTML = "<br>cartBeginData/cartFinalData"
             {% assign toBeAddedArr   = toBeAdded   | strip | split:"\n" %}
 
 //--  ## 13 ##  Make AJAX call to delete/add arr, based on toBeDeletedArr/toBeAddedArr -->
-document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"{{toBeAdded}}" + "<br>" +"{{toBeDeleted}}";
+//document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"{{toBeAdded}}" + "<br>" +"{{toBeDeleted}}";
 
             {% for toBeDeleteItemStr in toBeDeletedArr %}
             		{% assign toBeDeleteItem = toBeDeleteItemStr | split:":" %}
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        document.getElementById("deleteArea").innerHTML =
+                        //document.getElementById("deleteArea").innerHTML =
                           "Delete SUCCEED!";
                     }
                 };
@@ -303,7 +303,7 @@ document.getElementById("bundle2").innerHTML = "toBeAdded/toBeDeleted"+ "<br>"+"
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        document.getElementById("addArea").innerHTML =
+                        //document.getElementById("addArea").innerHTML =
                           "ADD SUCCEED!";
                     }
                 };
@@ -349,7 +349,7 @@ window.onload = load;
     $codeExistPost = strpos( $themeContent, "{% include 'bundleCheck' %}");
     if( $codeExistPost === false ){
         $posOfBodyEnd = strpos( $themeContent, '</body>');
-        $statementInject = "\n" . "  {% if template == 'cart' %}{% include 'bundleCheck' %}{% endif %}" . "\n";
+        $statementInject =  " {% if template == 'cart' %}{% include 'bundleCheck' %}{% endif %}"."\n";
         $themeContentNew = substr_replace( $themeContent , $statementInject,  $posOfBodyEnd, 0 );
 
 

@@ -1,4 +1,5 @@
 <?php
+
     if( isset( $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'] )){
 
       require_once __DIR__ . '/webhookFun.php';
@@ -19,18 +20,41 @@
       $data = file_get_contents('php://input');
       $verified = verify_webhook($data, $hmac_header);
 
-      if( $_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "products/create"){
-        $fileName = 'product_added_data.txt';
-        file_put_contents($fileName, $data, LOCK_EX);
-      }elseif( $_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "orders/create"){
-        $fileName = 'order_created_data.txt';
-        file_put_contents($fileName, print_r($data,true), LOCK_EX);
-        updateInventory($data, $shopify, $_SERVER["HTTP_X_SHOPIFY_SHOP_DOMAIN"] );
-      }elseif($_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "orders/cancelled"){
-        $fileName = 'order_cancelled_data.txt';
-        file_put_contents($fileName, $data, LOCK_EX);
-        updateInventory($data, $shopify, $_SERVER["HTTP_X_SHOPIFY_SHOP_DOMAIN"] );
-      }
+      if( $verified ){
+        if( $_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "products/create"){
+          // deal with new added product
 
+        }elseif( $_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "orders/create"){
+          updateInventory($data, $shopify, $_SERVER["HTTP_X_SHOPIFY_SHOP_DOMAIN"] );
+
+
+        }elseif($_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "orders/cancelled"){
+          updateInventory($data, $shopify, $_SERVER["HTTP_X_SHOPIFY_SHOP_DOMAIN"] );
+
+
+        }elseif($_SERVER['HTTP_X_SHOPIFY_TOPIC'] === "app/uninstalled" ){
+          // create connection to mysql
+          $servername = "shopifybundle.crzkedo145qb.us-west-1.rds.amazonaws.com";
+          $username = "caomingkai";
+          $password = "moon2181";
+          $dbname = "shopifybundle";
+          $conn = new mysqli($servername, $username, $password, $dbname);
+
+          // Check connection
+          if ($conn->connect_error) {
+              die("Connection failed: " . $conn->connect_error);
+              echo "<h1>Cannot access to 'shopifybundle' database </h1> " . "\n";
+          }else{
+              $shopDomain = $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'];
+              $sqlDel = "DELETE FROM shopToken WHERE domain='$shopDomain'";
+              $result = $conn->query($sqlDel);
+              // In cases the query failed.
+              if(!$result){
+                  echo "<h1>Cannot delete token of current shop, since cannot access to 'shopToken' table. </h1> " . "\n";
+              }
+          }
+          $conn->close();
+        }
+      }
     }
 ?>

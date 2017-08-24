@@ -1,21 +1,20 @@
 <pre>Array
 (
     [CONTENT_TYPE] => application/json
-    [HTTP_X_SHOPIFY_TOPIC] => orders/create
+    [HTTP_X_SHOPIFY_TOPIC] => products/create
     [HTTP_X_SHOPIFY_SHOP_DOMAIN] => 3rdappstore.myshopify.com
-    [HTTP_X_SHOPIFY_ORDER_ID] => 4915340229
-    [HTTP_X_SHOPIFY_TEST] => true
-    [HTTP_X_SHOPIFY_HMAC_SHA256] => Qy8n92YEkKBiLQ5gqostGOOrpUxMm2oA+ude/W6ktRk=
+    [HTTP_X_SHOPIFY_PRODUCT_ID] => 8899863941
+    [HTTP_X_SHOPIFY_HMAC_SHA256] => 2fxsBEmnMHLXaaOF4UYYitGVXtJQI4spYozDA3w47w4=
     [HTTP_ACCEPT_ENCODING] => gzip;q=1.0,deflate;q=0.6,identity;q=0.3
     [HTTP_ACCEPT] => */*
     [HTTP_USER_AGENT] => Ruby
-    [CONTENT_LENGTH] => 7317
+    [CONTENT_LENGTH] => 2039
     [HTTP_X_NEWRELIC_ID] => VQQUUFNS
-    [HTTP_X_NEWRELIC_TRANSACTION] => PxQPAlFQWVcJBwNVUgdTBwAIFB8EBw8RVU4aWlsPB1NXXFoDBgQFBgVSDkNKQQkCAQFUVlYBFTs=
+    [HTTP_X_NEWRELIC_TRANSACTION] => PxQABQdXXAUFBVJSAQYOUQUCFB8EBw8RVU4aVVxZAFYFUFhSAVcEW1NXBENKQQkCAQFUVlYBFTs=
     [HTTP_CONNECTION] => close
     [HTTP_HOST] => 9a6e602f.ngrok.io
     [HTTP_X_FORWARDED_PROTO] => https
-    [HTTP_X_FORWARDED_FOR] => 23.227.37.117
+    [HTTP_X_FORWARDED_FOR] => 23.227.37.123
     [PATH] => /usr/bin:/bin:/usr/sbin:/sbin
     [SERVER_SIGNATURE] => 
     [SERVER_SOFTWARE] => Apache/2.4.25 (Unix) PHP/5.6.30
@@ -29,7 +28,7 @@
     [CONTEXT_DOCUMENT_ROOT] => /Users/kevin/Sites
     [SERVER_ADMIN] => you@example.com
     [SCRIPT_FILENAME] => /Users/kevin/Sites/Shopify/3rdapp_public/webhookResponse.php
-    [REMOTE_PORT] => 64893
+    [REMOTE_PORT] => 60622
     [GATEWAY_INTERFACE] => CGI/1.1
     [SERVER_PROTOCOL] => HTTP/1.1
     [REQUEST_METHOD] => POST
@@ -37,8 +36,8 @@
     [REQUEST_URI] => /Shopify/3rdapp_public/webhookResponse.php
     [SCRIPT_NAME] => /Shopify/3rdapp_public/webhookResponse.php
     [PHP_SELF] => /Shopify/3rdapp_public/webhookResponse.php
-    [REQUEST_TIME_FLOAT] => 1503219856.78
-    [REQUEST_TIME] => 1503219856
+    [REQUEST_TIME_FLOAT] => 1503558568.53
+    [REQUEST_TIME] => 1503558568
     [argv] => Array
         (
         )

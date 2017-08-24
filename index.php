@@ -35,56 +35,37 @@
           <!-- when 'ok' clicked, it send selected items to the input box -->
         </div>
 <?php
+        echo "----------------------------"."\n";
+        echo '<a href="/Shopify/3rdapp_public/deleteBundle.php?type=all" target="_blank" > Delete All Bundles </a>'."\n";
+        echo "----------------------------<br />"."\n";
+?>
+
+<?php
 
     require_once __DIR__ . '/vendor/autoload.php';
-
     $config = array(
           'ShopUrl' => $_SESSION["shopUrl"],
           'AccessToken' => $_SESSION["accessToken"],
     );
-
-          echo '<h1>0. shop + token : </h1>' .  "\n";
-          print_r($config);
-          echo '<p> ------------------------  </p>' .  "\n";
-
-
     PHPShopify\ShopifySDK::config($config);
     $shopify = new PHPShopify\ShopifySDK;
 
-    //////////////////////
-    // $originP = 8672070661;
-    // $productInfo = $shopify->Product($originP)->get();
-    // $fileName = 'function_updateinventory_shadowVToOriginPV000000.txt';
-    // file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
-    //////////////////////
-    //////////////////////
-// $originP = 8672070661;
-// $originV = 37696175173;
-// $shadowQty = 2;
-//
-// $para = array( "inventory_quantity_adjustment" => -$shadowQty );
-//
-// $variantMetafield = $shopify->Product($originP)->Variant($originV)->put($para);
-    //////////////////////
-    //////////////////////
-    //////////////////////
+    //------------- Get shopId from install.php, for later database name use -----------------
 
-    //-------------  get customCollection and smartCollection -----------------
+    echo "<h1>shopId is: ".$_SESSION["shopId"]."</h1>";
+
+    //------------- Set 'all' collection, and get origin productInfo -----------------
     $customCollection = $shopify->CustomCollection->get();
     $smartCollection = $shopify->SmartCollection->get();
     $collections = array_merge($customCollection, $smartCollection);
     $_SESSION["config"] = $config;
     $_SESSION["collections"] = $collections;
-                                    // echo "<pre>";
-                                    // echo '<h1>customCollection:</h1>'."\n";
-                                    // print_r($customCollection);
-                                    // echo "</pre>";
-                                    //
-                                    // echo "<pre>";
-                                    // echo '<h1>smartCollection:</h1>'."\n";
-                                    // print_r($smartCollection);
-                                    // echo "</pre>";
-    // check if exists all in smartCollection
+
+    // set collection "all", in order to exclude those shadow products
+    // 1. GET both CustomCollection and SmartCollection
+    // 2. find out the 'all' selection, which handle=='all',
+    // 3. Modify it. Add a condition: vendor not_equals 'Products On Sales'
+    // 4. $products = $shopify->Product()->get();
     $numOfSmartC = sizeof($smartCollection);
     $all_ExistFlag = false;
     $all_CollectionID = "";
@@ -125,42 +106,35 @@
       $all_collectionID = $all_create['id'];
     }
 
-
     // get 'original' products with query string 'collectionId = all'
     $params = array(
       'collection_id' => $all_collectionID,
     );
     $products = $shopify->Product->get($params);
 
-    // set collection "all", in order to exclude those shadow products
-    // 1. GET both CustomCollection and SmartCollection
-    // 2. find out the 'all' selection, which handle=='all',
-    // 3. Modify it. Add a condition: vendor not_equals 'Products On Sales'
-    // 4. $products = $shopify->Product()->get();
 
-    // check if {shopUrl}ProductInfo.txt exists
-    $fileName = $_SESSION["shopUrl"] . "ProductInfo.txt";
+    // $fileName = $_SESSION["shopId"] . "ProductInfo.txt";
     $info = "";
     foreach( $products as $p ){
       $info .= $p["id"] . "," . $p["handle"] . "," . $p["title"] . "," . $p["image"]["src"] . "\n";
     }
-
     foreach( $collections as $c ){
       $info .= $c["id"] . "," . $c["handle"] . "," . $c["title"] . "," . $c["image"]["src"] . "\n";
     }
-    file_put_contents($fileName, $info, LOCK_EX);
-    file_put_contents($fileName, $info, LOCK_EX);
-    $_SESSION["productInfo"] = file_get_contents($fileName);
+    // file_put_contents($fileName, $info, LOCK_EX);
+    // $_SESSION["productInfo"] = file_get_contents($fileName);
+    $_SESSION["productInfo"] = $info;
 
-//-----------------------Existing bundle Info--------------------------------
-//---------------------------------------------------------------------------
+
+//-----------------------Display Existing bundle Info--------------------------------
     echo '<table border="1", border-collapse="collapse";>
             <tr>'."\n";
     echo '    <th>Weight</th><th>bundle Type</th><th>discount Type</th><th>bundle ID</th><th>bundle Detail</th>'."\n";
     echo '  </tr>'."\n";
 
-    $fileName = $_SESSION["shopUrl"] . "ShopBundle.txt";
-    if( file_exists( $fileName ) ){//create {shopUrl}productInfo.txt
+
+    $fileName =  "ShopBundle.txt" . $_SESSION["shopId"];
+    if( file_exists( $fileName ) ){
       $bundleInfoAll = file_get_contents($fileName);
       $bundleInfoArr = explode("\n" , trim($bundleInfoAll) );
       $num = count($bundleInfoArr);

@@ -19,51 +19,47 @@
     $secretKey = "d999981624124eb6b1a902a063a9e8ea";
     $shopUrl = "";
     $accessToken = "";
-
 //############ read accessToken from 'merchantToken.txt'########################
 
-    // Read token for shop, check if it is already install this app
-    // File Format:  "shopUrl_1,accessToken_1 /n shopUrl_2,accessToken_2 /n "
-    $file = 'merchantToken.txt';
-    $lines = explode("\n", file_get_contents($file));
+    require_once __DIR__ . '/../connectSql.php';
 
-          // echo "lines below "."\n";
-          // var_dump($lines);
-          // echo '<p> ------------------------  </p>' .  "\n";
-
+    $sqlToken = "SELECT domain, token FROM shopToken";
+    $result = $conn->query($sqlToken);
     $merchantHash = array();
-    forEach($lines as $oneLine ){
-      $keyValueArray = explode(",", $oneLine );
-      $merchantHash[$keyValueArray[0]] = $keyValueArray[1];
+
+    // In cases the query failed.
+    if(!$result){
+        echo "Query: " . $sqlToken . "\n";
+        echo "Errno: " . $conn->errno . "\n";
+        echo "Error: " . $conn->error . "\n";
+        echo "<h1>Cannot access to 'shopToken' table </h1> " . "\n";
+    }else{
+        // Query succeeded, get the  content in it
+        if ($result->num_rows > 0) {
+          while( $row = $result->fetch_assoc() ) {
+              $merchantHash[$row['domain']] = $row['token'];
+          }
+        }
     }
+    $result->free();
+    $conn->close();
+//############### check if app is installed on this shop #############################
 
     if(isset( $_GET['shop']) ){
-
       $shopUrl = $_GET['shop'];
       if( array_key_exists($shopUrl ,$merchantHash) ){
         $installed_flag = true;
-        $accessToken = $merchantHash[$shopUrl];
-
-              // echo '<p>  Step 1(1): read accessToken from merchantToken.txt && $accessToken exists </p>' .  "\n";
-              // echo "<p>shopUrl below:</p>"."\n";
-              // var_dump($shopUrl);
-              // echo "<p>accessToken below:</p>"."\n";
-              // var_dump($accessToken);
-              // echo '<p> ------------------------  </p>' .  "\n";
+        $accessToken = $merchantHash[$shopUrl];;
       }else{
         $installed_flag = false;
-              // echo '<p>  Step 1(0): read accessToken from merchantToken.txt && NO $accessToken exists </p>' .  "\n";
-              // var_dump($shopUrl);
-              // echo '<p> ------------------------  </p>' .  "\n";
       }
     }
 
-
-//############### Installation OR normal Operation #############################
+//############### Installation Phase OR normal Operation Phase #############################
 
     //=============already installed , directly manipulate shop object==========
     if( $installed_flag ){
-
+        // echo "true";
         $_SESSION["accessToken"] = $accessToken;
         $_SESSION["shopUrl"] = $_GET['shop'];
 
@@ -71,6 +67,7 @@
         exit();
     //==============haven't install, have to install first =====================
     }else{
+        // echo "false";
         // Installation Step 1: askForAuthorization
         // when merchant click "get", it is the APP URL in shopify partner panel that direct merchant to this script.
         // we need to redirect merchant to the oauth page to let merchant to grant authorization to the app.
@@ -86,40 +83,51 @@
         // Installation Step 2: getAccessToken
         // after merchant grant anthorization, and click "install" button
         if( isset($_GET['shop'])  && isset($_GET['code']) ){
-
+            $shopUrl = $_GET['shop'];
+            // config for $accessToken
             $config = array(
-                'ShopUrl' => $_GET['shop'],
+                'ShopUrl' => $shopUrl,
                 'ApiKey' => $apiKey,
                 'SharedSecret' => $secretKey,
             );
             PHPShopify\ShopifySDK::config($config);
             $accessToken = \PHPShopify\AuthHelper::getAccessToken();
 
-            $current = file_get_contents($file);
-            $current .= $_GET['shop']. "," .$accessToken."\n";
-            file_put_contents($file, $current,LOCK_EX);
-
-                  // echo '<h1> Step 2(0): have not installed this app </h1>' .  "\n";
-                  // echo "<h1> -----upper border----- </h1>"."\n";
-                  // echo "<h1> this should be accessToken: " . $accessToken . " ,shound not be blank</h1>"."\n";
-                  // echo "<h1> -----middle border----- </h1>"."\n";
-                  // echo "<h1> this should be current text content: " . $current . " ,shound not be blank</h1>"."\n";
-                  // echo "<h1> -----lower border----- </h1>"."\n";
-            // store $accessToken as global varible, for main php page use
-            $_SESSION["accessToken"] = $accessToken;
-            $_SESSION["shopUrl"] = $_GET['shop'];
-
-            //========================== set up webhook=========================
+            // config for $shopify
             $config = array(
-                  'ShopUrl' => $_GET['shop'],
+                  'ShopUrl' => $shopUrl,
                   'AccessToken' => $accessToken,
             );
             PHPShopify\ShopifySDK::config($config);
             $shopify = new PHPShopify\ShopifySDK;
+            $shop = $shopify->Shop->get();
+            $shopId = $shop['id'];
+            $_SESSION["shopId"] = $shopId;
+
+            // Create connection
+            $conn = new mysqli($servername, $username, $password, $dbname);
+            // Check connection
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+
+            $sqlTokenInsert =  "INSERT INTO shopToken ".
+                               "(domain,token,shopId)"."VALUES ".
+                               "('$shopUrl','$accessToken','$shopId')";;
+
+            if( !$result = $conn->query($sqlTokenInsert) ){
+              // echo "<h1> Cannot add current shopToken into 'shopToken' table </h1> " . "\n";
+            }
+            $conn->close();
+
+            $_SESSION["accessToken"] = $accessToken;
+            $_SESSION["shopUrl"] = $shopUrl;
+
+            //========================== set up webhook=========================
+
             setwebhook($shopify);
             //=====================insert bundleCheck snippet===================
             require_once __DIR__ . '/../BundleCheckInject.php';
-
             header("Location: /Shopify/3rdapp_public/index.php");
             exit();
         }

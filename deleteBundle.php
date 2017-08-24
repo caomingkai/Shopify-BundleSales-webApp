@@ -1,48 +1,7 @@
 <?php
     session_start();
     require_once __DIR__ . '/vendor/autoload.php';
-
-//===============App Uninstalled, delete corresponding AccessToken ==============
-if(isset($_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'] ) ){
-  define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
-  function verify_webhook($data, $hmac_header)
-  {
-    $calculated_hmac = base64_encode(hash_hmac('sha256', $data, SHOPIFY_APP_SECRET, true));
-    return hash_equals($hmac_header, $calculated_hmac);
-  }
-
-  $hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
-  $data = file_get_contents('php://input');
-  $fileName = 'appDeleteInfo.txt';
-  file_put_contents($fileName, $data, LOCK_EX);
-
-  $verified = verify_webhook($data, $hmac_header);
-  $fileName = 'webhookVerifyResult.txt';
-  file_put_contents($fileName, $verified, LOCK_EX);
-
-  if( $verified === true ){
-    $fileToken =  __DIR__ . '/install/merchantToken.txt';
-    $tokenList = explode("\n", trim(file_get_contents($fileToken) ) ) ;
-    $tempList = array();
-
-    $shopDomain = $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'];
-    foreach( $tokenList as $i=> $tStr ){
-      $tPair =  explode( ","  ,  $tStr );
-      if( $tPair[0] !== $shopDomain ){
-        $tempList[] = $tStr;
-      }
-    }
-
-    $tokenListStr = "";
-    foreach( $tempList as $tempStr ){
-      $tokenListStr .= $tempStr . "\n";
-    }
-    file_put_contents($fileToken, $tokenListStr, LOCK_EX);
-  }
-
-
-}
-
+    require_once __DIR__ . '/connectSql.php';
 
 //====================== Delete All Things =====================================
 
@@ -67,30 +26,34 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
           $shopify->Product($oneShadowProduct['id'])->delete();
       }
       $allShadowProduct = $shopify->Product->get($vendorPara);
-      echo "All Shadow Products is deleted. Now shadow product number is:" . count($allShadowProduct) . "\n";
+      echo "<h1>1 ---- All Shadow Products is deleted. Now shadow product number is:" . count($allShadowProduct) . '</h1>'."\n";
 
-      //---------------------  delete all files ------------------------------
-      $files = [
-                  $_SESSION["shopUrl"] . "ShopBundle.txt",
-                  $_SESSION["shopUrl"] . "shadowVToOriginPV.txt",
-                  $_SESSION["shopUrl"] . "BundleToShadowP.txt",
-                  $_SESSION["shopUrl"] . "OriginPtoOriginV.txt",
-                  $_SESSION["shopUrl"] . "OriginVtoShadowV.txt",
-               ];
+      //---------------------  delete all relevant tables from database ------------------------------
 
-      foreach ($files as $file) {
-          if (file_exists($file)) {
-              $res = unlink($file);
-              if(!$res){
-                echo $file . " wasn't been deleted correctly.";
-              }
-          } else {
-              echo $file . " doesn't exist.";
+
+      $tables = array(
+                  "ShopBundle"    .    $_SESSION["shopId"],
+                  "OriginPtoOriginV" . $_SESSION["shopId"],
+                  "OriginVtoShadowV" . $_SESSION["shopId"],
+                  "ShadowVToOriginPV" .$_SESSION["shopId"],
+                  "BundleToShadowP" .  $_SESSION["shopId"],
+               );
+      echo "<h1>2 ---- Database tables deletion status: </h1>"."\n";
+
+      foreach ($tables as $tbl) {
+          $sql = "DROP TABLE IF EXISTS $tbl";
+          $result = $conn->query($sql);
+          if ($result){
+              echo $tbl . ": has been deleted successfully.";
+              echo "<br />";
+          }else {
+              echo $tbl . ": wasn't deleted OR there is no such table.";
+              echo "<br />";
           }
       }
+      //-----------delete injected code snippet and related statement: "bundleCheck" and "bundleDisplay" ---------------------
 
-      //--------------------- delete injected code snippet ---------------------
-      // find out the main Theme.liquid, and its ID
+      // ===0=== find out the main Theme.liquid, and its ID
       $themes = $shopify->Theme->get();
       $numsOfThemes = count($theme);
       $themeID = 0;
@@ -100,13 +63,25 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
           break;
         }
       }
+      // ===0=== delete  "bundleCheck.liquid" and "bundleDisplay.liquid"
+      $para = array(
+        "asset[key]" => "snippets/bundleDisplay.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $themeContent = $shopify->Theme($themeID)->Asset->delete($para) ;
+      echo "<h1> 3 --- bundleDisplay.liquid is deleted successfully </h1>" .  "\n";
 
-      // get the cotent of main Theme
+      $para = array(
+        "asset[key]" => "snippets/bundleCheck.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $themeContent = $shopify->Theme($themeID)->Asset->delete($para) ;
+      echo "<h1> 4 --- bundleCheck.liquid deleted  issuccessfully </h1>" .  "\n";
+
+
+      // ===1=== delete "{% if template == 'cart' %}{% include 'bundleCheck' %}{% endif %}" from "theme.liquid"---
       $para = array(
         "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
       );
       $themeContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
-
 
       // find out </body> tag, in order to insert into this statement: "{% include 'bundleCheck' %}"
       // only if there doesn't exist such insertion before, we insert this code snippet. Otherwise, do nothing.
@@ -124,14 +99,59 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
           );
           $themeContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
 
-                                                      echo '<h1>$shopify below : </h1>' .  "\n";
-                                                      echo "<pre>";
-                                                      print_r ($themeContentNew);
-                                                      echo "</pre>";
-                                                      echo '<p> ------------------------  </p>' .  "\n";
+                                                      echo "<h1> 5 --- {% include 'bundleCheck' %} deleted successfully </h1>" .  "\n";
+
       }else{
-                                                      echo '<h1> There is no injected code  </h1>' .  "\n";
+                                                      echo "<h1> 5 --- There is no {% include 'bundleCheck' %} in theme.liquid  </h1>" .  "\n";
       }
+      // ===2=== delete "{% include 'bundleDisplay' %}" from "collection.liquid"---
+      $para = array(
+        "asset[key]" => "templates/collection.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $collectionContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
+      $codeStr = "{% include 'bundleDisplay' %}";
+      $codeStartPos = strpos( $collectionContent, $codeStr );
+      if( $codeStartPos !== false ){
+          $codeLength = strlen( $codeStr );
+          $emptyStr = "";
+          $collectionContentNew = substr_replace( $collectionContent , $emptyStr,  $codeStartPos, $codeLength );
+          $para = array(
+            "key" => "templates/collection.liquid",
+            "value" => $collectionContentNew
+          );
+          $collectionContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
+                                                      echo "<h1> 6 --- {% include 'bundleDisplay' %} in collection.liquid is deleted successfully </h1>" .  "\n";
+      }else{
+                                                      echo "<h1> There is no {% include 'bundleDisplay' %} in collection.liquid </h1>" .  "\n";
+      }
+
+      // ===3=== delete "bundleDisplay.liquid" from "product.liquid"---
+      $para = array(
+        "asset[key]" => "templates/product.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $productContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
+      $codeStartPos = strpos( $productContent, $codeStr );
+      if( $codeStartPos !== false ){
+          $codeLength = strlen( $codeStr );
+          $emptyStr = "";
+          $productContentNew = substr_replace( $productContent , $emptyStr,  $codeStartPos, $codeLength );
+          $para = array(
+            "key" => "templates/product.liquid",
+            "value" => $productContentNew
+          );
+          $productContentNew = $shopify->Theme($themeID)->Asset->put($para) ;
+                                                      echo "<h1> 7 --- {% include 'bundleDisplay' %} in 'product.liquid' is deleted successfully </h1>" .  "\n";
+
+      }else{
+                                                      echo '<h1> 7 --- There is no injected "bundleDisplay" in product.liquid </h1>' .  "\n";
+      }
+
+
+
+      $para = array(
+        "asset[key]" => "layout/theme.liquid",     // Note: the key is 'asset[key]', NOT 'key' !
+      );
+      $themeContent = $shopify->Theme($themeID)->Asset->get($para)['asset']['value'] ;
 
 
       //--------------------- delete webhooks ---------------------
@@ -142,9 +162,10 @@ if(isset($_GET['type']) && $_GET['type'] == 'all' ){
             }
         }
         $webhooks = $shopify->Webhook->get();
-        $fileName = 'deletedWebhooks.txt';
-        file_put_contents($fileName, json_encode($webhooks), LOCK_EX);
-
+        echo '<h1> 8 ---- only app/uninstalled webhook should be left :</h1>' .  "\n";
+        echo '<pre>';
+          echo print_r($webhooks);
+        echo '</pre>';
 
 
 //====================== Delete partial things Based on user input ====================

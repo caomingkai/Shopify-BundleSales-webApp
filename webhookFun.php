@@ -14,7 +14,7 @@
 //--2--  set 'app/uninstalled' webhook for product_creat and app_uninstall ------
         $para = array(
                 "topic" => "app/uninstalled",
-                "address" => "https://9a6e602f.ngrok.io/Shopify/3rdapp_public/deleteBundle.php",
+                "address" => "https://9a6e602f.ngrok.io/Shopify/3rdapp_public/webhookResponse.php",
                 "format" => "json"
         );
         $shopify->Webhook->post($para);
@@ -40,21 +40,36 @@
 
 
 
+
+
+
+
+
 //======================== fun updateInventory ====================================================
 //=================================================================================================
     function updateInventory($dataStr, $shopify, $shopUrl ){
 
         require_once __DIR__ . '/vendor/autoload.php';
+        require_once __DIR__ . '/connectSql.php';
         define('SHOPIFY_APP_SECRET', 'd999981624124eb6b1a902a063a9e8ea');
 
-        $file =  __DIR__ . '/install/merchantToken.txt';
-        $lines = explode("\n", file_get_contents($file));
+        // GET shopId and token from database: shopToken
+        $sqlToken = "SELECT domain, token, shopId FROM shopToken";
+        $result = $conn->query($sqlToken);
         $merchantHash = array();
-        forEach($lines as $oneLine ){
-          $keyValueArray = explode(",", $oneLine );
-          $merchantHash[$keyValueArray[0]] = $keyValueArray[1];
+
+        if( $result->num_rows === 0 ){
+            echo "<h1>Cannot access to 'shopToken' table </h1> " . "\n";
+        }else{
+            // Query succeeded, get the  content in it
+            if ($result->num_rows > 0) {
+              while( $row = $result->fetch_assoc() ) {
+                  $merchantHash[$row['domain']] = array( $row['token'] , $row['shopId']);
+              }
+            }
         }
-        $accessToken = $merchantHash[$shopUrl];
+        // config shopify obj with the accessToken obtained
+        $accessToken = $merchantHash[$shopUrl][0];
         $config = array(
               'ShopUrl' => $shopUrl,
               'AccessToken' => $accessToken,
@@ -62,21 +77,10 @@
         PHPShopify\ShopifySDK::config($config);
         $shopify = new PHPShopify\ShopifySDK;
 
-
-        $fileName = 'function_updateinventory_dataStr.txt';
-        file_put_contents($fileName, $dataStr, LOCK_EX);
-
-        $data = json_decode($dataStr,true);
-        $items = $data["line_items"];
-
-        $fileName = 'function_updateinventory_data.txt';
-        file_put_contents($fileName, print_r($data,true), LOCK_EX);
-
-        $fileName = 'function_updateinventory_items.txt';
-        file_put_contents($fileName, print_r($items,true), LOCK_EX);
-
         //--0-- loop through all items check if 'vendor' is 'product on sale'. If so:
         //--1-- record 'variant_id' and its 'quantity', into new obj: shadowItem{ variant_id => quantity }
+        $data = json_decode($dataStr,true);
+        $items = $data["line_items"];
         $shadowItems = array();
         foreach( $items as $item ){
             if( $item["vendor"] === "Products On Sales" ){
@@ -84,28 +88,22 @@
             }
         }
 
-        $fileName = 'function_updateinventory_shadowItems.txt';
-        file_put_contents($fileName, print_r($shadowItems,true), LOCK_EX);
-
         //--2-- read local database(shadowVToOriginV.txt), into an hashTable obj STO
-        $fileName = $shopUrl . "ShadowVToOriginPV.txt";
-        $items = explode("\n" , trim(file_get_contents($fileName)) );
+        $shadowVToOriginPV = "ShadowVToOriginPV" . $merchantHash[$shopUrl][1];
+        $sql = "SELECT shadowV, originP, originV FROM $shadowVToOriginPV";
+        $result = $conn->query($sql);
 
-        $shadowVToOriginPV = array();
-        foreach( $items as $item ){
-          $itemTri = explode( "#" , $item );
-          $shadowV = $itemTri[0];
-          $originP = $itemTri[1];
-          $originV = $itemTri[2];
-          $shadowVToOriginPV[$shadowV] = array( $originP, $originV);
+        $shadowVToOriginPV =  array();
+        if( $result->num_rows === 0 ){
+            echo "<h1>Cannot access to ". $shadowVToOriginPV ." table </h1> " . "\n";
+        }else{
+            // Query succeeded, get the  content in it
+            if ($result->num_rows > 0) {
+              while( $row = $result->fetch_assoc() ) {
+                  $shadowVToOriginPV[$row['shadowV']] = array( $row['originP'] , $row['originV']);
+              }
+            }
         }
-
-        $fileName = 'function_updateinventory_shadowVToOriginPV.txt';
-        file_put_contents($fileName, print_r($shadowVToOriginPV,true), LOCK_EX);
-
-        $productInfo = "aaaaaaaaaaaaaaaa";
-        $fileName = 'function_updateinventory_shadowVToOriginPV11111111.txt';
-        file_put_contents($fileName, print_r($productInfo,true), LOCK_EX);
 
         foreach( $shadowItems as $shadowVar=>$shadowQty ){
             $originP = $shadowVToOriginPV[$shadowVar][0];
