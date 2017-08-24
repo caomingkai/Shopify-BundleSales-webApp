@@ -1,5 +1,5 @@
 # Custom Bundle Sales Web Application
-
+ By 08/24/2017, Implemented webhooks and linked to MySQL on AWS. Everything is done, except some tweaks needed for frontend webpages.
  WorkFlowy: https://workflowy.com/s/HdnT.62VuPVlGWh
 
  Using PHP Shopify SDK:https://github.com/phpclassic/php-shopify/blob/master/README.md
