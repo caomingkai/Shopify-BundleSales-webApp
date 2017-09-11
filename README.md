@@ -1,6 +1,6 @@
 # Custom Bundle Sales Web Application
  By 08/24/2017, Implemented webhooks and linked to MySQL on AWS. Everything is done, except some tweaks needed for frontend webpages.
- 
+
  WorkFlowy: https://workflowy.com/s/HdnT.62VuPVlGWh
 
  Using PHP Shopify SDK:https://github.com/phpclassic/php-shopify/blob/master/README.md
@@ -8,15 +8,15 @@
  ## I. OAuth process
  ### Related File:
    1. install/install.php
-   1. merchantToken.txt --- **write** --- keep record of shop and its accessToken
-   1. productInfo.txt --- **write**   --- keep record of productInfo for this shop, used as selecting items when making a bundle
-   1. collectionInfo.txt --- **write** --- keep record of collectionInfo for this shop, used as selecting items
-   1. assetInfo.txt --- **write**     --- used for inserting bundleCheck.liquid into assets, and append it to cart.liquid
+   1. merchantToken.sql --- **write** --- keep record of shop and its accessToken
+   1. productInfo.sql --- **write**   --- keep record of productInfo for this shop, used as selecting items when making a bundle
+   1. collectionInfo.sql --- **write** --- keep record of collectionInfo for this shop, used as selecting items
+   1. assetInfo.sql --- **write**     --- used for inserting bundleCheck.liquid into assets, and append it to cart.liquid
  ### Work Flow:
    1. Merchant find this app in appstore, click "GET".
       + The browser would direct them to the url left by me in Shopify Parter panel, which is: http:mingkaicao.AmazonWebService.com//Shopify/3rdapp_public/install/install.php.
       + Meanwhile, the browser send following parameters with the URL: ?shop=...&hmac=...&timestamp=...
-   2. The app backend server receives this GET request with those parameters. First it will check if this shop has already installed this app or not, by check its database(merchantToken.txt).
+   2. The app backend server receives this GET request with those parameters. First it will check if this shop has already installed this app or not, by check its database(merchantToken.sql).
       + If there exist such shop with the same name, redirect merchant to the index webpage using header() function.
       +  If there doesn't exist this shop in database, redirect merchant back to Shopify server to ask them for authorization, with following parameters: client_id(apiKey), scope, redirect_uri, with shopUrl rendering such url: https://".$shopUrl."/admin/OAuth/authorize?client_id=".$apiKey."&scope=".$scopes."&redirect_uri=".$appUrl."install/install.php
    3. The merchant is redirected to the above URL, and click OK/Cancel to authorize this app to read some info about his store. When 'OK' is clicked, they are directed to the redirect_uri specified in above URL.
@@ -32,20 +32,20 @@
  ### Related File:
    1. index.php  --- render the first page after merchants click the app icon in their admin panel
    1. addBundle.php  --- add new bundle sales
-      + update shopBundle.txt / shadowToOrigin.txt
+      + update shopBundle.sql / shadowToOrigin.sql
       + make REST calls to Shopify server to modify shop.metafield for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
       + update and inject bundle_detect.liquid and other code snippet into assets on Shopify server for this shop
    1. deleteBundle.php --- delete specific bundle
       + same as deleteBundle.php
-   1. productInfo.txt  ---**read**
-   1. collectionInfo.txt   --- **read**
-   1. shopBundle.txt  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
+   1. productInfo.sql  ---**read**
+   1. collectionInfo.sql   --- **read**
+   1. shopBundle.sql  --- **read/write** --- keep record of bundleInfo for this shop. Content format:
       + unique bundleID , item num, productID and discount pairs
       + 1,3,19202,0.5,12021,0.8,19393,0.8
  ### Work Flow:
    1. when merchants click app icon in their admin panel, direct them to this frontend page, which is actually a php file rendering into html.
-   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.txt / shadowToOrigin.txt etc.
+   2. First, check database, see if there already exists bundle sales. If so, display bundle info at top; if not, display nothing. Also, on display panel, there should be 'delete' button for merchant to use, which would send AJAX call to deleteBundle.php. Then the deleteBundle.php deal with bundle deletion. And update shopBundle.sql / shadowToOrigin.sql etc.
    3. In the php file, read product/collection information from local database, for merchants later select from to make their bundle sales combo. And write these info and checkbox into a <div></div> block.
    4. When merchants click 'choose item', it will open a modal window with info read from <div> block, making selection.
    5. Merchants continue adding items and their discounts, then click 'submit'. This would send AJAX call to addBundle.php.
@@ -54,18 +54,18 @@
  ## III. App Back-end
  ### Function:
    1. deal with newly **added/deleted POST** bundle from front-end, calculate new price for **"shadow products"** in bundle sales. _Releted file_: addBundle.php
-   1. prefix unique BundleID with received POST parameters, store it in local database. _Releted file_:  shopBundle.txt
+   1. prefix unique BundleID with received POST parameters, store it in local database. _Releted file_:  shopBundle.sql
    1. make RESTful POST call to Shopify server, to update **shop.metafield** of this shop
    1. make RESTful POST call to Shopify server, to add **"shadow products"** for corresponding bundle sales
-   1. keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: shadowToOrigin.txt
+   1. keep record of added shadow products of a shop, based on response from POST adding call.  _Releted file_: shadowToOrigin.sql
    1. (_Pending_) insert bundleCheck.liquid into Assets of this shop ( Maybe could be done for only one time, not each time )
    1. deal with webhook responses from Shopify server, in case product_added/ order_completed events happen.
       + if order_completed webhook, read response to see completed product quantity to update original product inventory
-      + if product_added webhook, see if it belongs to a certain bundle sale, add **"shadow products"** for this product. Meanwhile, update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
+      + if product_added webhook, see if it belongs to a certain bundle sale, add **"shadow products"** for this product. Meanwhile, update productInfo.sql / collectionInfo.sql / shadowToOrigin.sql
 
  ### Related File:
    1. addBundle.php  --- add new bundle sales
-      + update shopBundle.txt / shadowToOrigin.txt
+      + update shopBundle.sql / shadowToOrigin.sql
       + make REST calls to Shopify server to modify shop.metafield.bundleInfo for this shop
       + make REST calls to Shopify server to add **"shadow products"** with sales price
       + make REST calls to Shopify server to add shop.metafield.originToShadow about added shadow productID and its bundleID into original product
@@ -76,72 +76,72 @@
          +  [invisible] metafield.bundleInfo.bundleNum   |   metafield.bundleInfo.bundleDetail
          +  [invisible] metafiled.originToShadow
       + files related to "1-shadow variant"
-         + bundleToShadowP.txt: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
+         + bundleToShadowP.sql: Based on bundleID, get Shadow ProductID, and directly make POST delete them.
       + files related to "2-metafield.bundleInfo.bundleNum   |   ~.bundleDetail "
-         + shopBundle.txt: this file contains bundleInfo content
+         + shopBundle.sql: this file contains bundleInfo content
       + files related to "3-metafiled.originToShadow"
-         +  shopBundle.txt
-         +  originPToOriginV.txt
-         +  originVtoShadowV.txt
-         +  general idea: when delete a bundle, First check 'shopBundle.txt', to find out what product are involved; Second based on 'originPToOriginV.txt', to find out what meta key 'originVariantID'; Third, based on 'originVtoShadowV.txt', find out what shadow variant need to be deleted.
-   1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.txt / collectionInfo.txt / shadowToOrigin.txt
+         +  shopBundle.sql
+         +  originPToOriginV.sql
+         +  originVtoShadowV.sql
+         +  general idea: when delete a bundle, First check 'shopBundle.sql', to find out what product are involved; Second based on 'originPToOriginV.sql', to find out what meta key 'originVariantID'; Third, based on 'originVtoShadowV.sql', find out what shadow variant need to be deleted.
+   1. webhookHandler.php  --- receive webhook events, call inventoryUpdate.php to update inventory, and update productInfo.sql / collectionInfo.sql / shadowToOrigin.sql
    1. inventoryUpdate.php  --- when customers have paid an order, update original products inventory base on webhook response
-   1. productInfo.txt  --- **write based on webhook**  --- could be updated due to webhook events
-   1. collectionInfo.txt   --- **write based on webhook**  --- could be updated due to webhook events
-   1. shopBundle.txt  --- **read/write** --- backup for shop.metafield.bundleInfo. updated by addBundle.php / deleteBundle.php
-   1. originPToOriginV.txt  --- **read/write** --- Used when delete a certain bundle, to find the meta key 'originVariantID' need to updateed ,delete or add certain BDID:shadowVariantID
+   1. productInfo.sql  --- **write based on webhook**  --- could be updated due to webhook events
+   1. collectionInfo.sql   --- **write based on webhook**  --- could be updated due to webhook events
+   1. shopBundle.sql  --- **read/write** --- backup for shop.metafield.bundleInfo. updated by addBundle.php / deleteBundle.php
+   1. originPToOriginV.sql  --- **read/write** --- Used when delete a certain bundle, to find the meta key 'originVariantID' need to updateed ,delete or add certain BDID:shadowVariantID
       + format : originProductID: originVariantID_1, originVariantID_2, originVariantID_3
-   1. originVtoShadowV.txt  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
+   1. originVtoShadowV.sql  --- **read/write** --- backup for shop.metafield.originToShadow. keep track of added __originVariant__ VS __bundleID__:__shadowVariant__, update metafield.originToShadow.originVariantID
       + [key] originVariantID_1 # metafield_ID_1 <--->  [value] bundleID_1:shadowVariantID_1,bundleID_2:shadowVariantID_2
-   1. shadowVToOriginV.txt --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
+   1. shadowVToOriginV.sql --- **read/write** --- keep track of added __shadowVariant__ VS __originVariant__, update original product inventory
       + format : shadowVariantID, originVariantID
 
-   1. bundleToShadowP.txt --- **read/write** --- keep track of __bundleID__ and __shadowProduct__, in case certain bundle deletion or app uninstall
+   1. bundleToShadowP.sql --- **read/write** --- keep track of __bundleID__ and __shadowProduct__, in case certain bundle deletion or app uninstall
       + format : bundleID, shadowProductID_1, shadowProductID_2, ...
 
  ### Work Flow:
-   1. first read into shopBundle.txt / shadowToOrigin.txt, for later use
+   1. first read into shopBundle.sql / shadowToOrigin.sql, for later use
    2. receive newly POST bundleInfo, check request type: add/ delete/ add&delete ?
    2. when add Bundle:
-      + create unique bundleID, and append it with POST parameters; update shopBundle.txt
+      + create unique bundleID, and append it with POST parameters; update shopBundle.sql
       + make REST calls to update shop.metafield.bundleInfo
       + make REST calls to add **"shadow products"** in current shop
       + make REST calls to shop.metafield.originToShadow
-      + update bundleToShadow.txt / shadowToOrigin.txt / originToShadow.txt
+      + update bundleToShadow.sql / shadowToOrigin.sql / originToShadow.sql
    3. when delete Bundle:
       + read POST parameter['bundleID'], find out which bundle need to be deleted
-      + delete it from shopBundle.txt
+      + delete it from shopBundle.sql
       + make REST calls to update shop.metafield.bundleInfo
       + make REST calls to update shop.metafield.originToShadow
-      + make REST calls to delete **"shadow products"** in current shop, based on bundleToShadow.txt,
-      + delete it from bundleToShadow.txt / shadowToOrigin.txt
+      + make REST calls to delete **"shadow products"** in current shop, based on bundleToShadow.sql,
+      + delete it from bundleToShadow.sql / shadowToOrigin.sql
    4. Webhook: when merchants edit/add a new product, tigger product create/update/delete events, Shopify server POST json data to this app backend file webhookHandler.php. webhookHandler.php do the following things:
-      + if _add_ a new product, First, add this product into productInfo.txt. Second, check if this product falls into a certain collection which belongs to a bundle. If so, do following:
+      + if _add_ a new product, First, add this product into productInfo.sql. Second, check if this product falls into a certain collection which belongs to a bundle. If so, do following:
           + make REST calls to add **"shadow products"** in current shop
           + make REST calls to shop.metafield.originToShadow
-          + update bundleToShadow.txt / shadowToOrigin.txt
+          + update bundleToShadow.sql / shadowToOrigin.sql
       + if _edit_ an existing product, check if the following things are modified:
           + [08/04/17] Basically, as long as there are changes, old shadow product should be deleted, and add new shadow product.
-          + if **price** is changed, update productInfo.txt / collection.txt
+          + if **price** is changed, update productInfo.sql / collection.sql
           + [08/04/17] update shop.metafield.originToShadow, i.e. delete old mapping, update new mapping
-          + [08/04/17] update bundleToShadow.txt / shadowToOrigin.txt
+          + [08/04/17] update bundleToShadow.sql / shadowToOrigin.sql
           And If this product belongs to a certain bundle, have to call REST call to change its shadow product's price
-          + if **collection** is changed, update productInfo.txt / collection.txt;
-          And If this product belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle; loop check if now it belongs to a new bundle, have to call REST to add new shadow product, update bundleToShadow.txt / shadowToOrigin.txt
+          + if **collection** is changed, update productInfo.sql / collection.sql;
+          And If this product belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle; loop check if now it belongs to a new bundle, have to call REST to add new shadow product, update bundleToShadow.sql / shadowToOrigin.sql
       + if _delete_ a product, do the following:
-          + update productInfo.txt / collection.txt
-          + If it belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle;  Also update bundleToShadow.txt / shadowToOrigin.txt
+          + update productInfo.sql / collection.sql
+          + If it belongs to a certain bundle, have to call REST call to delete its shadow product belonging to this corresponding bundle;  Also update bundleToShadow.sql / shadowToOrigin.sql
     5. Webhook: update product inventory after customers pay off their order. This event also triggers a webhook POST from Shopify server.
         + loop through all line items in the order, check if there exists shadow products.
         + If YES, for each of such shadow products, do the following things:
-           + do a math to update the current quantity of this shadow product in productInfo.txt.
-           + based on shadowToOrigin.txt, find out its original product,
+           + do a math to update the current quantity of this shadow product in productInfo.sql.
+           + based on shadowToOrigin.sql, find out its original product,
            + make REST call to update the quantity of the original product in Shopify server.
         + If No, do nothing.
  ### Files relationship
-   1. shopBundle.txt is the source info of shopify.metafield.bundleInfo
-   3. shadowToOrigin.txt <----> shopify.metafield.originToShadow, they have opposite key:value pairs
-   4. bundleToShadow.txt ---> shadowToOrigin.txt , from this we could find all involved origin products
+   1. shopBundle.sql is the source info of shopify.metafield.bundleInfo
+   3. shadowToOrigin.sql <----> shopify.metafield.originToShadow, they have opposite key:value pairs
+   4. bundleToShadow.sql ---> shadowToOrigin.sql , from this we could find all involved origin products
 
  ## IIII. Related shopify object for current shop
  ### shop.metafield
